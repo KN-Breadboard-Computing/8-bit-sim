@@ -11,3 +11,6 @@ function (add_module MODULE_NAME)
 endfunction()
 
 add_module(TRISTATE_BUFFER basics/tristate_buffer.v)
+add_module(CPU cpu/cpu.v)
+add_module(ALU cpu/alu.v)
+add_module(CONTROL_UNIT cpu/control_unit.v)
