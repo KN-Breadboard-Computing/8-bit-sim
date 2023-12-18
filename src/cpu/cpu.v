@@ -3,7 +3,7 @@ module cpu (
     output wire [15:0] addr_bus,
     inout wire [7:0] bus
 );
-    `include "cpu/signals.v"
+    `include "include/signals.v"
 
     // SIGNAL REGISTER
     reg [41:0] signals = 0;

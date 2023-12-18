@@ -3,6 +3,8 @@ if (NOT verilator_FOUND)
     message(FATAL_ERROR "Verilator not found")
 endif()
 
+set(INCLUDE_DIRS "src/include")
+
 function (add_module MODULE_NAME)
     add_library(${MODULE_NAME} SHARED)
 
@@ -16,4 +18,3 @@ add_module(REGISTER basics/register.v)
 add_module(CPU cpu/cpu.v)
 add_module(ALU cpu/alu.v)
 add_module(CONTROL_UNIT cpu/control_unit.v)
-add_module(SIGNALS cpu/signals.v)
