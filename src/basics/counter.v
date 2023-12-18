@@ -12,17 +12,14 @@ module counter(
     out = 0;
 
   always @(posedge clk) begin
-    if (write)
-      out <= in;
-    else
-      if (countdown)
+    if (reset)
+        out <= 0;
+    else if (write)
+        out <= in;
+    else if (countdown)
         out <= out - 1;
-      else
+    else
         out <= out + 1;
-  end
-
-  always @(posedge reset) begin
-    out <= 0;
   end
 
 endmodule
