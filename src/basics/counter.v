@@ -23,3 +23,4 @@ module counter(
   end
 
 endmodule
+
