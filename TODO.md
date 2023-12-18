@@ -1,2 +1,2 @@
 - [ ] Integrate GTKWave
-- [ ] Integrate CTest
+- [x] Integrate CTest

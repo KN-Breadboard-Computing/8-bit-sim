@@ -10,4 +10,4 @@ function (add_module MODULE_NAME)
     verilate(${MODULE_NAME} SOURCES ${MODULE_VERILOG_SOURCES} INCLUDE_DIRS "." VERILATOR_ARGS -Wall -cc)
 endfunction()
 
-add_module(ALU alu.v)
+add_module(TRISTATE_BUFFER basics/tristate_buffer.v)
