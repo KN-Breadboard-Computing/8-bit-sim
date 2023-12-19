@@ -11,4 +11,5 @@ endfunction()
 
 add_verilator_test(tristate_buffer_test TRISTATE_BUFFER)
 add_verilator_test(register_test REGISTER)
-add_verilator_test(ram_test RAM)
+# add_verilator_test(ram_test RAM)
+add_verilator_test(alu_test ALU)

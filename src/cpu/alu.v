@@ -14,86 +14,89 @@ module alu (
     reg overflow_flag;
 
     assign flags_register =
-        {0, 0, 0, sign_flag, parity_flag, zero_flag, carry_flag, overflow_flag};
+        {3'b000, sign_flag, parity_flag, zero_flag, carry_flag, overflow_flag};
 
 // TODO: Implement this in gate level.
     always @(posedge clk) begin
         if (out_enable) begin
             casez (opcode)
             //CONST_ZERO
-                'b0000000000000:
+                'b00000:
                     data_out <= 8'b00000000;
             //CONST_ONE
-                'b0000000000001:
+                'b00001:
                     data_out <= 8'b00000001;
             //CONST_MINUS_ONE
-                'b0000000000010:
+                'b00010:
                     data_out <= 8'b11111111;
             //REG_A
-                'b0000000000011:
+                'b00011:
                     data_out <= reg_a;
             //REG_B
-                'b0000000000100:
+                'b00100:
                     data_out <= reg_b;
             //MINUS_REG_A
-                'b0000000000101:
+                'b00101:
                     data_out <= ~reg_a + 1'b1;
             //MINUS_REG_B
-                'b0000000000110:
+                'b00110:
                     data_out <= ~reg_b + 1'b1;
             //REG_A_PLUS_REG_B
-                'b0000000000111:
+                'b00111:
                     data_out <= reg_a + reg_b;
             //REG_A_MINUS_REG_B
-                'b0000000001000:
+                'b01000:
                     data_out <= reg_a - reg_b;
             //REG_B_MINUS_REG_A
-                'b0000000001001:
+                'b01001:
                     data_out <= reg_b - reg_a;
             //NOT_REG_A
-                'b0000000001010:
+                'b01010:
                     data_out <= ~reg_a;
             //NOT_REG_B
-                'b0000000001011:
+                'b01011:
                     data_out <= ~reg_b;
             //REG_A_OR_REG_B
-                'b0000000001100:
+                'b01100:
                     data_out <= reg_a | reg_b;
             //REG_A_AND_REG_B
-                'b0000000001101:
+                'b01101:
                     data_out <= reg_a & reg_b;
             //REG_A_XOR_REG_B
-                'b0000000001110:
+                'b01110:
                     data_out <= reg_a ^ reg_b;
             //ARITHMETIC_RIGHT_SHIFT_REG_A
-                'b0000000001111:
+                'b01111:
                     data_out <= reg_a >> 1;
             //ARITHMETIC_RIGHT_SHIFT_REG_B
-                'b0000000010000:
+                'b10000:
                     data_out <= reg_b >> 1;
             //ARITHMETIC_LEFT_SHIFT_REG_A
-                'b0000000010001:
+                'b10001:
                     data_out <= reg_a << 1;
             //ARITHMETIC_LEFT_SHIFT_REG_B
-                'b0000000010010:
+                'b10010:
                     data_out <= reg_b << 1;
             //LOGIC_RIGHT_SHIFT_REG_A
-                'b0000000010011:
+                'b10011:
                     data_out <= reg_a >>> 1;
             //LOGIC_RIGHT_SHIFT_REG_B
-                'b0000000010100:
+                'b10100:
                     data_out <= reg_b >>> 1;
             //LOGIC_LEFT_SHIFT_REG_A
-                'b0000000010101:
+                'b10101:
                     data_out <= reg_a <<< 1;
             //LOGIC_LEFT_SHIFT_REG_B
-                'b0000000010110:
+                'b10110:
                     data_out <= reg_b <<< 1;
             endcase
         end
-    end
 
-    assign flags_register =
-        out_enable ? {0, 0, 0, sign_flag, parity_flag, zero_flag, carry_flag, overflow_flag} : 8'bz;
+        sign_flag <= (data_out[7] == 1'b1);
+        parity_flag <= (^data_out[7:0]);
+        zero_flag <= (data_out == 8'b00000000);
+        carry_flag <= (reg_a + reg_b > 9'b011111111);
+        overflow_flag <= ((reg_a[7] == reg_b[7]) && (reg_a[7] != data_out[7]));
+    end
 
 endmodule

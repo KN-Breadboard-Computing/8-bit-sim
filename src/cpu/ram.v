@@ -19,6 +19,8 @@ module ram (
         end
     end
 
+    // FIXME: The reason why data is not being written is that this
+    //        assignment overwrites the input whenever write_enable is high.
     assign data = (output_enable & ~write_enable) ? buffer : 8'bz;
 
 endmodule
