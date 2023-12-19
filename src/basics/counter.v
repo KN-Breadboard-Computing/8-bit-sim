@@ -1,4 +1,4 @@
-module counter(
+module counter #(parameter width = 8) (
   input wire clk,
   input wire write,
   input wire reset,
@@ -6,8 +6,6 @@ module counter(
   input wire [width-1:0] in,
   output reg [width-1:0] out
 );
-  parameter width = 8;
-
   initial
     out = 0;
 
