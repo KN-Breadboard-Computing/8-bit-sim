@@ -43,3 +43,8 @@ option(ENABLE_TESTS "Enables tests" ON)
 if (ENABLE_TESTS)
     add_subdirectory(tests)
 endif()
+
+option(ENABLE_EXAMPLES "Enables examples" ON)
+if (ENABLE_EXAMPLES)
+    add_subdirectory(examples)
+endif()
