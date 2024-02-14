@@ -1,3 +1,4 @@
+#include <bitset>
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "Valu.h"
 #include "doctest/doctest.h"
@@ -62,12 +63,17 @@ TEST_CASE("ALU Operations") {
         A = random_cdata();
         B = random_cdata();
 
+        const auto expected = data.expected_value_func();
+
+        INFO(data.test_title, ", opcode: ", std::bitset<8>(data.opcode), ", A: ", A, ", B: ", B,
+             ", expected: ", expected);
+
         alu->reg_a = A;
         alu->reg_b = B;
         alu->clk = !alu->clk;
         alu->eval();
 
-        CHECK(alu->data_out == data.expected_value_func());
+        CHECK(alu->data_out == expected);
 
         delete alu;
     }
