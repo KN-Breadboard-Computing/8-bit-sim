@@ -2,12 +2,12 @@
 `include "basics/counter.v"
 
 module control_unit #(
-    parameter ROM_A = `"`ROMS_PATH/a.bin`",
-    parameter ROM_B = `"`ROMS_PATH/b.bin`",
-    parameter ROM_C = `"`ROMS_PATH/c.bin`",
-    parameter ROM_D = `"`ROMS_PATH/d.bin`",
-    parameter ROM_E = `"`ROMS_PATH/e.bin`",
-    parameter ROM_F = `"`ROMS_PATH/f.bin`"
+    parameter ROM_A = `"`ROMS_PATH/A.bin`",
+    parameter ROM_B = `"`ROMS_PATH/B.bin`",
+    parameter ROM_C = `"`ROMS_PATH/C.bin`",
+    parameter ROM_D = `"`ROMS_PATH/D.bin`",
+    parameter ROM_E = `"`ROMS_PATH/E.bin`",
+    parameter ROM_F = `"`ROMS_PATH/F.bin`"
 )(
     input wire clk,
     input wire not_clk,
@@ -61,11 +61,6 @@ always @(posedge not_clk) begin
     sig_d <= rom_d[inst_bus];
     sig_e <= rom_e[inst_bus];
     sig_f <= rom_f[inst_bus];
-end
-
-initial begin
-    $monitor("sig_a = %2hh", sig_a);
-    $display("ROM_A = %s", ROM_A);
 end
 
 assign inst_bus = { 1'b0, inst_reg, mcc_bus };
