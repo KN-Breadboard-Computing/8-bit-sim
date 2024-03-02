@@ -7,20 +7,25 @@ module control_unit #(
     parameter ROM_C = `"`ROMS_PATH/C.bin`",
     parameter ROM_D = `"`ROMS_PATH/D.bin`",
     parameter ROM_E = `"`ROMS_PATH/E.bin`",
-    parameter ROM_F = `"`ROMS_PATH/F.bin`"
+    parameter ROM_F = `"`ROMS_PATH/F.bin`",
+    parameter ROM_BRANCH = `"`ROMS_PATH/BRANCH.bin`"
 )(
     input wire clk,
     input wire not_clk,
     input wire reg_ir_load_override, // TODO: figure out how this thing resets
     input wire mcc_rst_override,   // TODO: figure out how this thing resets
     input wire [7:0] data,
+    // verilator lint_off UNUSED
+    input wire [7:0] flags,
+    // verilator lint_off UNUSED
     output wire [41:0] signals
 );
 wire reg_ir_load;
 wire mcc_tick;
 wire mcc_rst;
 wire [3:0] mcc_bus;
-wire [12:0] inst_bus;
+wire [12:0] raw_inst_bus;
+wire [12:0] branched_inst_bus;
 
 reg [7:0] inst_reg;
 reg [7:0] sig_a;
@@ -38,6 +43,7 @@ reg [7:0] rom_c [(1 << 13)];
 reg [7:0] rom_d [(1 << 13)];
 reg [7:0] rom_e [(1 << 13)];
 reg [7:0] rom_f [(1 << 13)];
+reg [7:0] rom_cjmp [(1 << 13)];
 
 counter #( .width(4) ) mcc (
     .clk(mcc_tick),
@@ -49,21 +55,20 @@ counter #( .width(4) ) mcc (
 );
 
 always @(posedge reg_ir_load or posedge reg_ir_load_override) begin
-    $display("loading inst_reg data = %2hh", data);
     inst_reg <= data;
 end
 
 always @(posedge not_clk) begin
-    $display("loading signals from roms addr = %5hh", inst_bus);
-    sig_a <= rom_a[inst_bus];
-    sig_b <= rom_b[inst_bus];
-    sig_c <= rom_c[inst_bus];
-    sig_d <= rom_d[inst_bus];
-    sig_e <= rom_e[inst_bus];
-    sig_f <= rom_f[inst_bus];
+    sig_a <= rom_a[branched_inst_bus];
+    sig_b <= rom_b[branched_inst_bus];
+    sig_c <= rom_c[branched_inst_bus];
+    sig_d <= rom_d[branched_inst_bus];
+    sig_e <= rom_e[branched_inst_bus];
+    sig_f <= rom_f[branched_inst_bus];
 end
 
-assign inst_bus = { 1'b0, inst_reg, mcc_bus };
+assign raw_inst_bus = { inst_reg, flags[4:0] };
+assign branched_inst_bus = { 1'b0, rom_cjmp[raw_inst_bus], mcc_bus };
 
 assign signals[`REG_A_LOAD] = sig_a[0] & clk;
 assign signals[`REG_B_LOAD] = sig_a[1] & clk;
@@ -111,6 +116,8 @@ initial begin
     $fread(rom_e, file);
     file = $fopen(ROM_F, "rb");
     $fread(rom_f, file);
+    file = $fopen(ROM_BRANCH, "rb");
+    $fread(rom_cjmp, file);
 end
 
 endmodule
