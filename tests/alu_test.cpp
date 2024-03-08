@@ -55,9 +55,10 @@ TEST_CASE("ALU Operations") {
 
     for (auto i = 0; i < TEST_COUNT; i++) {
         alu = new Valu();
-        alu->clk = 0;
         alu->eval();
-        alu->out_enable = 1;
+        alu->alu_out = 0;
+        alu->reg_f_load = 0;
+        alu->reg_f_out = 1;
         alu->opcode = data.opcode;
 
         A = random_cdata();
@@ -70,7 +71,6 @@ TEST_CASE("ALU Operations") {
 
         alu->reg_a = A;
         alu->reg_b = B;
-        alu->clk = !alu->clk;
         alu->eval();
 
         CHECK(alu->data_out == expected);
@@ -79,4 +79,55 @@ TEST_CASE("ALU Operations") {
     }
 }
 
-// TODO: Add tests for ALU flags
+
+TEST_CASE("ALU Flags") {
+    Valu *alu;
+    AluInputState data;
+
+    CData A;
+    CData B;
+
+    const auto seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::mt19937 rng(seed);
+    std::uniform_int_distribution<std::mt19937::result_type> dist(0, std::numeric_limits<CData>::max());
+    const auto random_cdata = [&]() -> CData { return static_cast<CData>(dist(rng)); };
+
+    auto alu_input_state = std::vector<AluInputState>{
+        {.opcode = 0b01101, .test_title = "Positive odd number bitwise and 00h", .reg_a = 0x7D, .reg_b = 0x00, .expected_value_func = [&]() -> CData { return 0b000'01000; }},
+        {.opcode = 0b01101, .test_title = "Positive even number bitwise and 00h", .reg_a = 0x7E, .reg_b = 0x00, .expected_value_func = [&]() -> CData { return 0b000'01000; }},
+        {.opcode = 0b01101, .test_title = "Positive odd number bitwise and FFh", .reg_a = 0x7D, .reg_b = 0xFF, .expected_value_func = [&]() -> CData { return 0b000'00110; }},
+        {.opcode = 0b01101, .test_title = "Positive even number bitwise and FFh", .reg_a = 0x7E, .reg_b = 0xFF, .expected_value_func = [&]() -> CData { return 0b000'00100; }},
+        {.opcode = 0b01101, .test_title = "Negative odd number bitwise and 00h", .reg_a = 0x8D, .reg_b = 0x00, .expected_value_func = [&]() -> CData { return 0b000'01000; }},
+        {.opcode = 0b01101, .test_title = "Negative even number bitwise and 00h", .reg_a = 0x8E, .reg_b = 0x00, .expected_value_func = [&]() -> CData { return 0b000'01000; }},
+        {.opcode = 0b01101, .test_title = "Negative odd number bitwise and FFh", .reg_a = 0x8D, .reg_b = 0xFF, .expected_value_func = [&]() -> CData { return 0b000'00111; }},
+        {.opcode = 0b01101, .test_title = "Negative even number bitwise and FFh", .reg_a = 0x8E, .reg_b = 0xFF, .expected_value_func = [&]() -> CData { return 0b000'00101; }},
+        {.opcode = 0b00111, .test_title = "Overflow", .reg_a = 0x55, .reg_b = 0x6A, .expected_value_func = [&]() -> CData { return 0b000'10111; }},
+    };
+
+    DOCTEST_VALUE_PARAMETERIZED_DATA(data, alu_input_state);
+
+    alu = new Valu();
+    alu->eval();
+    alu->reg_f_load = 0;
+    alu->reg_f_out = 1;
+    alu->alu_out = 1;
+    alu->opcode = data.opcode;
+
+    A = data.reg_a;
+    B = data.reg_b;
+
+    const auto expected = data.expected_value_func();
+
+    INFO(data.test_title, ", opcode: ", std::bitset<8>(data.opcode), ", A: ", A, ", B: ", B,
+            ", expected: ", expected);
+
+    alu->reg_a = A;
+    alu->reg_b = B;
+    alu->reg_f_load = 1;
+    alu->reg_f_out = 0;
+    alu->eval();
+
+    CHECK(alu->data_out == expected);
+
+    delete alu;
+}
