@@ -1,11 +1,10 @@
 #include "Valu.h"
 #include "raylib.h"
-#include "raymath.h"
 #include <array>
 #include <iostream>
 #include <vector>
 
-constexpr static int screen_width = 600;
+constexpr static int screen_width = 640;
 constexpr static int screen_height = 480;
 constexpr static int fps = 60;
 
