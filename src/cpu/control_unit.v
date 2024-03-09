@@ -18,7 +18,7 @@ module control_unit #(
     // verilator lint_off UNUSED
     input wire [7:0] flags,
     // verilator lint_off UNUSED
-    output wire [41:0] signals
+    output wire [46:0] signals
 );
 wire reg_ir_load;
 wire mcc_tick;
@@ -99,6 +99,7 @@ assign mcc_tick = sig_f[1] & clk;
 assign signals[`MCC_TICK] = mcc_tick;
 assign mcc_rst = sig_f[2];
 assign signals[`MCC_RST] = mcc_rst;
+assign signals[`INT4:`INT0] = 5'h00;
 
 // Load data into ROM, uses a plain binary file, not a text file with $memreadb/h
 // format

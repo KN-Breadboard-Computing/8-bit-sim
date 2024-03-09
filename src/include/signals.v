@@ -40,3 +40,8 @@
 `define REG_IR_LOAD             'd39
 `define MCC_TICK                'd40 
 `define MCC_RST                 'd41
+`define INT0                    'd42
+`define INT1                    'd43
+`define INT2                    'd44
+`define INT3                    'd45
+`define INT4                    'd46
