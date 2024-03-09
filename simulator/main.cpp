@@ -14,6 +14,10 @@ constexpr static auto scaled_height = static_cast<uint32_t>(screen_height * scal
 
 // x must be in [0, screen_width) and y in [0, screen_height)
 void set_pixel(std::span<Color> pixels, uint32_t x, uint32_t y, Color color) {
+    if (x >= screen_width || y >= screen_height) {
+        return;
+    }
+
     for (auto i = 0u; i < scale; i++) {
         for (auto j = 0u; j < scale; j++) {
             const auto dx = x * scale + j;
