@@ -13,4 +13,4 @@ endif()
 
 target_compile_options(${EXEC_NAME} PRIVATE ${MAIN_FLAGS})
 
-target_link_libraries(${EXEC_NAME} ALU raylib)
+target_link_libraries(${EXEC_NAME} GPU raylib)
