@@ -15,24 +15,33 @@ module gpu(
     input wire [1:0] interrupt_in,
     input wire [7:0] data_in,
     input wire interrupt_enable,
-    output wire [7:0] red_out,
-    output wire [7:0] green_out,
-    output wire [7:0] blue_out
+    output reg [7:0] red_out,
+    output reg [7:0] green_out,
+    output reg [7:0] blue_out
 );
 
-reg [7:0] glyphs_data [0:`TEXT_MODE_WIDTH * `TEXT_MODE_HEIGHT - 1];
+// NOTE: The order of array sizes might need to be reversed
+reg [7:0] glyphs_data [0:`TEXT_MODE_WIDTH * `TEXT_MODE_HEIGHT - 1][0:1];
+reg active_buf;
+
 reg [6:0] text_mode_cursor_x; // [0,TEXT_MODE_WIDTH - 1]
 reg [5:0] text_mode_cursor_y; // [0,TEXT_MODE_HEIGHT - 1]
+
+reg [9:0] h_counter_val;
+reg [9:0] v_counter_val;
 
 initial begin
     text_mode_cursor_x = 0;
     text_mode_cursor_y = 0;
+    active_buf = 0;
+    h_counter_val = 0;
+    v_counter_val = 0;
 end
 
 always_ff @(posedge interrupt_enable) begin
     case (interrupt_in)
         `SIG_STORE_BYTE: begin
-            glyphs_data[text_mode_cursor_x + text_mode_cursor_y * `TEXT_MODE_WIDTH] <= data_in;
+            glyphs_data[text_mode_cursor_x + text_mode_cursor_y * `TEXT_MODE_WIDTH][1 - active_buf] <= data_in;
             text_mode_cursor_x <= text_mode_cursor_x + 1;
             if (text_mode_cursor_x == `TEXT_MODE_WIDTH) begin
                 text_mode_cursor_x <= 0;
@@ -49,20 +58,31 @@ always_ff @(posedge interrupt_enable) begin
            end else begin
            text_mode_cursor_y <= text_mode_cursor_y + data_in[5:0];
        end
-       `SIG_DISPLAY: $display("Interrupt 2");
+       `SIG_DISPLAY: begin
+           active_buf <= 1 - active_buf;
+       end
        `SIG_CLEAR: $display("Interrupt 3");
     endcase
 end
 
-// always_ff @(posedge clk) begin
-//     red_out <= 128;
-//     green_out <= 255;
-//     blue_out <= 0;
-// end
+always_ff @(posedge clk) begin
+    h_counter_val <= h_counter_val + 1;
 
-assign red_out = 128;
-assign green_out = 255;
-assign blue_out = 0;
+    if (h_counter_val < `DISPLAY_WIDTH && v_counter_val < `DISPLAY_HEIGHT) begin
+        red_out <= glyphs_data[h_counter_val / 8 + v_counter_val / 8 * `TEXT_MODE_WIDTH][active_buf][7:5];
+        green_out <= glyphs_data[h_counter_val / 8 + v_counter_val / 8 * `TEXT_MODE_WIDTH][active_buf][4:2];
+        blue_out <= glyphs_data[h_counter_val / 8 + v_counter_val / 8 * `TEXT_MODE_WIDTH][active_buf][1:0];
+    end
+
+    if (h_counter_val == 800) begin
+        h_counter_val <= 0;
+        v_counter_val <= v_counter_val + 1;
+    end
+
+    if (v_counter_val == 525) begin
+        v_counter_val <= 0;
+    end
+end
 
 endmodule
 

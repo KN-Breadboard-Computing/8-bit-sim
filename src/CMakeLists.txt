@@ -17,6 +17,9 @@ function (add_module MODULE_NAME)
 
     add_library(${MODULE_NAME} SHARED)
 
+    # this magic formula silences warnings on the verilated libraries
+    set_target_properties(${MODULE_NAME} PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:${MODULE_NAME},INTERFACE_INCLUDE_DIRECTORIES>)
+
     set(DEFINES "")
 
     if (ADD_MODULE_RESOURCE_DIRS)
@@ -53,4 +56,4 @@ add_module(ALU SOURCES cpu/alu.sv)
 add_module(CONTROL_UNIT SOURCES cpu/control_unit.v RESOURCE_DIRS roms -DROMS_PATH)
 add_module(RAM SOURCES adapters/ram_adapter.sv basics/ram.sv PREFIX Vram TOP_MODULE ram_adapter)
 add_module(MEM_UNIT SOURCES adapters/mem_unit_adapter.sv cpu/mem_unit.sv PREFIX Vmem_unit TOP_MODULE mem_unit_adapter)
-add_module(GPU SOURCES gpu/gpu.sv)
+add_module(GPU SOURCES basics/counter.v gpu/gpu.sv PREFIX Vgpu TOP_MODULE gpu)

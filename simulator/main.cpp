@@ -29,6 +29,7 @@ void set_pixel(std::span<Color> pixels, uint32_t x, uint32_t y, Color color) {
 
 auto main() -> int {
     auto gpu = Vgpu{};
+    gpu.eval();
 
     auto pixels = std::array<Color, scaled_width * scaled_height>{};
 
@@ -45,17 +46,14 @@ auto main() -> int {
     const auto texture = LoadTextureFromImage(image);
 
     while (!WindowShouldClose()) {
-        // gpu.clk = !gpu.clk;
-        // gpu.eval();
+        gpu.clk = !gpu.clk;
+        gpu.eval();
 
         for (auto y = 0u; y < screen_height; y++) {
             for (auto x = 0u; x < screen_width; x++) {
-                // const auto red = gpu.red_out;
-                // const auto blue = gpu.blue_out;
-                // const auto green = gpu.green_out;
-                const auto red = 128;
-                const auto blue = 255;
-                const auto green = 0;
+                const auto red = gpu.red_out;
+                const auto blue = gpu.blue_out;
+                const auto green = gpu.green_out;
                 set_pixel(pixels, x, y, Color{red, green, blue, 255});
             }
         }
