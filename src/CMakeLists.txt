@@ -57,3 +57,4 @@ add_module(CONTROL_UNIT SOURCES cpu/control_unit.v RESOURCE_DIRS roms -DROMS_PAT
 add_module(RAM SOURCES adapters/ram_adapter.sv basics/ram.sv PREFIX Vram TOP_MODULE ram_adapter)
 add_module(MEM_UNIT SOURCES adapters/mem_unit_adapter.sv cpu/mem_unit.sv PREFIX Vmem_unit TOP_MODULE mem_unit_adapter)
 add_module(GPU SOURCES basics/counter.v gpu/gpu.sv PREFIX Vgpu TOP_MODULE gpu)
+add_module(TMP SOURCES cpu/tmp.sv adapters/tmp_adapter.sv PREFIX Vtmp TOP_MODULE tmp_adapter)
