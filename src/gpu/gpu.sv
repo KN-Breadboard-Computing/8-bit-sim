@@ -2,6 +2,9 @@
 `define DISPLAY_HEIGHT 480
 `define TEXT_MODE_WIDTH 80
 `define TEXT_MODE_HEIGHT 60
+`define GLYPH_COUNT 256
+`define GLYPH_WIDTH 8
+`define GLYPH_HEIGHT 8
 
 `define SIG_STORE_BYTE 2'b00
 `define SIG_MOVE_CURSOR 2'b01
@@ -21,8 +24,15 @@ module gpu(
 );
 
 // NOTE: The order of array sizes might need to be reversed
-reg [7:0] glyphs_data [0:`TEXT_MODE_WIDTH * `TEXT_MODE_HEIGHT - 1][0:1];
+// NOTE: The array is 2D because we need to store two buffers
+//       - one active, one inactive
+reg [7:0] glyph_buffers [0:`TEXT_MODE_WIDTH * `TEXT_MODE_HEIGHT - 1][0:1];
+reg [7:0] color_buffers [0:`DISPLAY_WIDTH * `DISPLAY_HEIGHT - 1][0:1];
 reg active_buf;
+
+// NOTE: glyph_data[glyph_number + x%8 + (y%8 * 8)] = 1 <=> FG color
+//       glyph_data[glyph_number + x%8 + (y%8 * 8)] = 0 <=> BG color
+reg glyph_data [0:`GLYPH_COUNT * `GLYPH_WIDTH * `GLYPH_HEIGHT]
 
 reg [6:0] text_mode_cursor_x; // [0,TEXT_MODE_WIDTH - 1]
 reg [5:0] text_mode_cursor_y; // [0,TEXT_MODE_HEIGHT - 1]
@@ -41,7 +51,7 @@ end
 always_ff @(posedge interrupt_enable) begin
     case (interrupt_in)
         `SIG_STORE_BYTE: begin
-            glyphs_data[text_mode_cursor_x + text_mode_cursor_y * `TEXT_MODE_WIDTH][1 - active_buf] <= data_in;
+            glyph_buffers[text_mode_cursor_x + text_mode_cursor_y * `TEXT_MODE_WIDTH][1 - active_buf] <= data_in;
             text_mode_cursor_x <= text_mode_cursor_x + 1;
             if (text_mode_cursor_x == `TEXT_MODE_WIDTH) begin
                 text_mode_cursor_x <= 0;
@@ -69,9 +79,9 @@ always_ff @(posedge clk) begin
     h_counter_val <= h_counter_val + 1;
 
     if (h_counter_val < `DISPLAY_WIDTH && v_counter_val < `DISPLAY_HEIGHT) begin
-        red_out <= glyphs_data[h_counter_val / 8 + v_counter_val / 8 * `TEXT_MODE_WIDTH][active_buf][7:5];
-        green_out <= glyphs_data[h_counter_val / 8 + v_counter_val / 8 * `TEXT_MODE_WIDTH][active_buf][4:2];
-        blue_out <= glyphs_data[h_counter_val / 8 + v_counter_val / 8 * `TEXT_MODE_WIDTH][active_buf][1:0];
+        red_out <= 255;
+        green_out <= 0;
+        blue_out <= 0;
     end
 
     if (h_counter_val == 800) begin
