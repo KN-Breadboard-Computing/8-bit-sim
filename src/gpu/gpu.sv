@@ -41,9 +41,24 @@ reg [9:0] h_counter_val;
 reg [9:0] v_counter_val;
 
 initial begin
-    integer file;
-    file = $fopen("`FONT_PATH/font.bin`", "rb");
+    integer file, i;
+    file = $fopen(`"`FONT_PATH/font.bin`", "rb");
     $fread(glyph_data, file);
+
+    for (i = 0; i < 8; i = i + 1) begin
+        $write("%1b", glyph_data[i]);
+    end
+    $display("");
+
+    for (i = 8; i < 16; i = i + 1) begin
+        $write("%1b", glyph_data[i]);
+    end
+    $display("");
+
+    for (i = 16; i < 24; i = i + 1) begin
+        $write("%1b", glyph_data[i]);
+    end
+    $display("");
 
     text_mode_cursor_x = 0;
     text_mode_cursor_y = 0;
@@ -80,10 +95,9 @@ always_ff @(posedge interrupt_enable) begin
 end
 
 always_ff @(posedge clk) begin
-    h_counter_val <= h_counter_val + 1;
-
     if (h_counter_val < `DISPLAY_WIDTH && v_counter_val < `DISPLAY_HEIGHT) begin
-        if (glyph_data[h_counter_val[2:0] + v_counter_val[2:0] * 8] == 1) begin
+        // glyph_data[h_counter % 8 + (v_counter % 8) * 8]
+        if (glyph_data[{9'b0,v_counter_val[2:0],h_counter_val[2:0]}] == 0) begin
             red_out <= 255;
             green_out <= 255;
             blue_out <= 255;
@@ -93,6 +107,8 @@ always_ff @(posedge clk) begin
             blue_out <= 0;
         end
     end
+
+    h_counter_val <= h_counter_val + 1;
 
     if (h_counter_val == 800) begin
         h_counter_val <= 0;

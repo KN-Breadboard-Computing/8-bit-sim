@@ -29,13 +29,13 @@ void set_pixel(std::span<Color> pixels, uint32_t x, uint32_t y, Color color) {
 
 auto main() -> int {
     auto gpu = Vgpu{};
-    gpu.eval();
 
     auto pixels = std::array<Color, scaled_width * scaled_height>{};
 
     InitWindow(scaled_width, scaled_height, "Hello World!");
 
-    SetTargetFPS(fps);
+    unsigned int v_counter = 0u;
+    unsigned int h_counter = 0u;
 
     const Image image = {.data = pixels.data(),
                          .width = scaled_width,
@@ -46,23 +46,26 @@ auto main() -> int {
     const auto texture = LoadTextureFromImage(image);
 
     while (!WindowShouldClose()) {
-        gpu.clk = !gpu.clk;
-        gpu.eval();
+        for(int i = 0; i < 800 * 525; i++) {
+            gpu.clk = 0;
+            gpu.eval();
+            gpu.clk = 1;
+            gpu.eval();
 
-        for (auto y = 0u; y < screen_height; y++) {
-            for (auto x = 0u; x < screen_width; x++) {
+            if(v_counter < screen_height && h_counter < screen_width) {
                 const auto red = gpu.red_out;
                 const auto blue = gpu.blue_out;
                 const auto green = gpu.green_out;
-                set_pixel(pixels, x, y, Color{red, green, blue, 255});
+                set_pixel(pixels, h_counter, v_counter, Color{red, green, blue, 255});
             }
+
+            h_counter = (h_counter + 1) % 800;
+            v_counter = (v_counter + (h_counter == 0)) % 525;
         }
 
         UpdateTexture(texture, pixels.data());
 
         BeginDrawing();
-
-        ClearBackground(RAYWHITE);
 
         DrawTexture(texture, 0, 0, RAYWHITE);
 

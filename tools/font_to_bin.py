@@ -35,11 +35,19 @@ def main():
         return
 
     bin_img = np.array(img).reshape((128, 128)).flatten()
-    bitwise_bin_img = [0 if pixel == 0 else 0 for pixel in bin_img]
+    bitwise_bin_img = [0 if pixel == 0 else 1 for pixel in bin_img]
+
+    print(bitwise_bin_img)
 
     with open(output_file, 'wb') as f:
-        for bit in bitwise_bin_img:
-            f.write(bit.to_bytes(1, byteorder='big'))
+        for square_idx in range(0, 256):
+            x_offset = (square_idx % 16) * 8
+            y_offset = (square_idx // 16) * 8
+            for i in range(8):
+                byte = 0
+                for j in range(8):
+                    byte |= bitwise_bin_img[x_offset + j + (y_offset + i) * 128] << (7 - j)
+                f.write(byte.to_bytes(1, byteorder='big'))
 
     print(f"Success: Converted '{input_file}' to '{output_file}'.")
 
