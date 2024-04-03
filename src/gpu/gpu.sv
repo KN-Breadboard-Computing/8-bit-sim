@@ -43,6 +43,11 @@ reg [9:0] v_counter_val;
 initial begin
     integer file, i;
     file = $fopen(`"`FONT_PATH/font.bin`", "rb");
+
+    if (file == 0) begin
+        $display("Error opening file");
+        $finish;
+    end
     $fread(glyph_data, file);
 
     for (i = 0; i < 8; i = i + 1) begin
@@ -97,7 +102,7 @@ end
 always_ff @(posedge clk) begin
     if (h_counter_val < `DISPLAY_WIDTH && v_counter_val < `DISPLAY_HEIGHT) begin
         // glyph_data[h_counter % 8 + (v_counter % 8) * 8]
-        if (glyph_data[{9'b0,v_counter_val[2:0],h_counter_val[2:0]}] == 0) begin
+        if (glyph_data[{9'b0,v_counter_val[2:0],h_counter_val[2:0]}] == 1) begin
             red_out <= 255;
             green_out <= 255;
             blue_out <= 255;
