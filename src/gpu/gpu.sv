@@ -32,7 +32,7 @@ reg active_buf;
 
 // NOTE: glyph_data[glyph_number + x%8 + (y%8 * 8)] = 1 <=> FG color
 //       glyph_data[glyph_number + x%8 + (y%8 * 8)] = 0 <=> BG color
-reg glyph_data [0:`GLYPH_COUNT * `GLYPH_WIDTH * `GLYPH_HEIGHT]
+reg glyph_data [0:`GLYPH_COUNT * `GLYPH_WIDTH * `GLYPH_HEIGHT];
 
 reg [6:0] text_mode_cursor_x; // [0,TEXT_MODE_WIDTH - 1]
 reg [5:0] text_mode_cursor_y; // [0,TEXT_MODE_HEIGHT - 1]
@@ -41,6 +41,10 @@ reg [9:0] h_counter_val;
 reg [9:0] v_counter_val;
 
 initial begin
+    integer file;
+    file = $fopen("`FONT_PATH/font.bin`", "rb");
+    $fread(glyph_data, file);
+
     text_mode_cursor_x = 0;
     text_mode_cursor_y = 0;
     active_buf = 0;
@@ -79,9 +83,15 @@ always_ff @(posedge clk) begin
     h_counter_val <= h_counter_val + 1;
 
     if (h_counter_val < `DISPLAY_WIDTH && v_counter_val < `DISPLAY_HEIGHT) begin
-        red_out <= 255;
-        green_out <= 0;
-        blue_out <= 0;
+        if (glyph_data[h_counter_val[2:0] + v_counter_val[2:0] * 8] == 1) begin
+            red_out <= 255;
+            green_out <= 255;
+            blue_out <= 255;
+        end else begin
+            red_out <= 0;
+            green_out <= 0;
+            blue_out <= 0;
+        end
     end
 
     if (h_counter_val == 800) begin
