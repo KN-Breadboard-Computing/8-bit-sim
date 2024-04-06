@@ -1,6 +1,7 @@
 #include "Vgpu.h"
 #include "raylib.h"
 #include <array>
+#include <fstream>
 #include <iostream>
 #include <span>
 
@@ -45,6 +46,9 @@ auto main() -> int {
 
     const auto texture = LoadTextureFromImage(image);
 
+    // open file
+    auto logs = std::ofstream{"logs.txt"};
+
     while (!WindowShouldClose()) {
         for (int i = 0; i < 800 * 525; i++) {
             gpu.clk = 0;
@@ -56,6 +60,8 @@ auto main() -> int {
                 const auto red = gpu.red_out;
                 const auto blue = gpu.blue_out;
                 const auto green = gpu.green_out;
+                const auto is_black = gpu.red_out == 0 && gpu.blue_out == 0 && gpu.green_out == 0;
+                logs << "x: " << h_counter << ", y: " << v_counter << ", color: " << (is_black ? 0 : 1) << std::endl;
                 set_pixel(pixels, h_counter, v_counter, Color{red, green, blue, 255});
             }
 
@@ -72,6 +78,8 @@ auto main() -> int {
         DrawFPS(10, 10);
 
         EndDrawing();
+
+        return 0;
     }
     return 0;
 }

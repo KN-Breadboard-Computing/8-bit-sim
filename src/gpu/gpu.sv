@@ -89,7 +89,7 @@ always_ff @(posedge interrupt_enable) begin
        // depending on the MSB either move x or y
        if (data_in[7]) begin
            text_mode_cursor_x <= text_mode_cursor_x + data_in[6:0];
-           end else begin
+       end else begin
            text_mode_cursor_y <= text_mode_cursor_y + data_in[5:0];
        end
        `SIG_DISPLAY: begin
@@ -107,6 +107,7 @@ always_ff @(posedge clk) begin
         end else begin
             shift_reg_load <= 0;
         end
+        $display("shift_reg_out: %b", shift_reg_out);
         if (shift_reg_out == 1) begin
             red_out <= 255;
             green_out <= 255;
