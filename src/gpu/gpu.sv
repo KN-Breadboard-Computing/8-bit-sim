@@ -32,13 +32,24 @@ reg active_buf;
 
 // NOTE: glyph_data[glyph_number + x%8 + (y%8 * 8)] = 1 <=> FG color
 //       glyph_data[glyph_number + x%8 + (y%8 * 8)] = 0 <=> BG color
-reg glyph_data [0:`GLYPH_COUNT * `GLYPH_WIDTH * `GLYPH_HEIGHT];
+reg [7:0] glyph_data [0:(`GLYPH_COUNT / 8) * `GLYPH_WIDTH * `GLYPH_HEIGHT];
 
 reg [6:0] text_mode_cursor_x; // [0,TEXT_MODE_WIDTH - 1]
 reg [5:0] text_mode_cursor_y; // [0,TEXT_MODE_HEIGHT - 1]
 
 reg [9:0] h_counter_val;
 reg [9:0] v_counter_val;
+
+reg shift_reg_load;
+reg [7:0] shift_reg_in;
+wire shift_reg_out;
+shift_reg glyph_row(
+    .clk(clk),
+    .data_in(shift_reg_in),
+    .data_in_enable(shift_reg_load),
+    .shift_enable(1),
+    .data_out(shift_reg_out)
+);
 
 initial begin
     integer file, i;
@@ -51,19 +62,8 @@ initial begin
     $fread(glyph_data, file);
 
     for (i = 0; i < 8; i = i + 1) begin
-        $write("%1b", glyph_data[i]);
+        $display("%8b", glyph_data[i]);
     end
-    $display("");
-
-    for (i = 8; i < 16; i = i + 1) begin
-        $write("%1b", glyph_data[i]);
-    end
-    $display("");
-
-    for (i = 16; i < 24; i = i + 1) begin
-        $write("%1b", glyph_data[i]);
-    end
-    $display("");
 
     text_mode_cursor_x = 0;
     text_mode_cursor_y = 0;
@@ -101,8 +101,13 @@ end
 
 always_ff @(posedge clk) begin
     if (h_counter_val < `DISPLAY_WIDTH && v_counter_val < `DISPLAY_HEIGHT) begin
-        // glyph_data[h_counter % 8 + (v_counter % 8) * 8]
-        if (glyph_data[{9'b0,v_counter_val[2:0],h_counter_val[2:0]}] == 1) begin
+        if (h_counter_val % 8 == 0) begin
+            shift_reg_in <= glyph_data[{9'b0,v_counter_val[2:0]}];
+            shift_reg_load <= 1;
+        end else begin
+            shift_reg_load <= 0;
+        end
+        if (shift_reg_out == 1) begin
             red_out <= 255;
             green_out <= 255;
             blue_out <= 255;

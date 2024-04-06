@@ -46,13 +46,13 @@ auto main() -> int {
     const auto texture = LoadTextureFromImage(image);
 
     while (!WindowShouldClose()) {
-        for(int i = 0; i < 800 * 525; i++) {
+        for (int i = 0; i < 800 * 525; i++) {
             gpu.clk = 0;
             gpu.eval();
             gpu.clk = 1;
             gpu.eval();
 
-            if(v_counter < screen_height && h_counter < screen_width) {
+            if (v_counter < screen_height && h_counter < screen_width) {
                 const auto red = gpu.red_out;
                 const auto blue = gpu.blue_out;
                 const auto green = gpu.green_out;

@@ -8,12 +8,15 @@ module shift_reg (
 
 reg [7:0] register;
 
+assign data_out = register[7];
+
 always_ff @(posedge clk) begin
-    if (data_in_enable)
+    if (shift_enable) begin
+        register <= {register[6:0], 1'b0};
+    end
+
+    if (data_in_enable) begin
         register <= data_in;
-    else if (shift_enable) begin
-        data_out <= register[7];
-        register <= register << 1;
     end
 end
 

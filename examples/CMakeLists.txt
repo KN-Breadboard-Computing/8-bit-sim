@@ -1,5 +1,5 @@
-add_executable(test1 test1.cpp)
+# add_executable(test1 test1.cpp)
 
-set(libs ALU)
+# set(libs ALU)
 
-target_link_libraries(test1 ${libs})
+# target_link_libraries(test1 ${libs})
