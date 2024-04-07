@@ -12,10 +12,11 @@ module control_unit #(
 )(
     input wire clk,
     input wire not_clk,
+    input wire rst, // active low
     input wire reg_ir_load_override, // TODO: figure out how this thing resets
+    // verilator lint_off UNUSED
     input wire mcc_rst_override,   // TODO: figure out how this thing resets
     input wire [7:0] data,
-    // verilator lint_off UNUSED
     input wire [7:0] flags,
     // verilator lint_off UNUSED
     output wire [46:0] signals
@@ -46,15 +47,15 @@ reg [7:0] rom_f [(1 << 13)];
 reg [7:0] rom_cjmp [(1 << 13)];
 
 counter #( .width(4) ) mcc (
-    .clk(mcc_tick),
+    .clk(mcc_tick | ~mcc_rst),
     .write(1'b0),
-    .reset(~mcc_rst | mcc_rst_override), // mcc_rst is active low
+    .reset(~mcc_rst), // mcc_rst is active low
     .countdown(1'b0),
     .in(4'b0),
     .out(mcc_bus)
 );
 
-always @(posedge reg_ir_load or posedge reg_ir_load_override) begin
+always @(posedge reg_ir_load or posedge reg_ir_load_override or negedge rst) begin
     inst_reg <= data;
 end
 
@@ -95,9 +96,9 @@ assign signals[`REG_MBR_USE_BUS:`MEM_IN] = sig_e[6:0];
 
 assign reg_ir_load = sig_f[0] & clk;
 assign signals[`REG_IR_LOAD] = reg_ir_load;
-assign mcc_tick = sig_f[1] & clk;
+assign mcc_tick = (sig_f[1] & clk) | ~rst;
 assign signals[`MCC_TICK] = mcc_tick;
-assign mcc_rst = sig_f[2];
+assign mcc_rst = sig_f[2] & rst;
 assign signals[`MCC_RST] = mcc_rst;
 assign signals[`INT4:`INT0] = 5'h00;
 

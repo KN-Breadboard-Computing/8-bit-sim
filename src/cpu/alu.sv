@@ -14,7 +14,8 @@ module alu(
     input wire [4:0] opcode,
     input wire [7:0] reg_a,
     input wire [7:0] reg_b,
-    output wire [7:0] data_out
+    output wire [7:0] data_out,
+    output wire [7:0] flags_out
 );
 
 logic inv_a;
@@ -45,6 +46,7 @@ logic [7:0] data_bus;
 
 reg [4:0] flags_reg;
 
+assign flags_out = { 3'b000, flags_reg };
 assign data_out = ~alu_out ? data_bus : ~reg_f_out ? { 3'b000, flags_reg } : 8'hZ;
 
 always_latch begin

@@ -259,6 +259,7 @@ TEST_CASE("Control Unit works") {
     ctrl.reg_ir_load_override = 0;
     ctrl.mcc_rst_override = 0;
     ctrl.data = 0;
+    ctrl.rst = 1;
     ctrl.eval();
     CHECK_EQ(ctrl.signals, 0UL);
 
