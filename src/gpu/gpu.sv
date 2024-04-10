@@ -107,7 +107,7 @@ always_ff @(posedge clk) begin
         end else begin
             shift_reg_load <= 0;
         end
-        $display("shift_reg_out: %b", shift_reg_out);
+        // $display("shift_reg_out: %b", shift_reg_out);
         if (shift_reg_out == 1) begin
             red_out <= 255;
             green_out <= 255;
