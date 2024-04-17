@@ -43,11 +43,15 @@ reg [9:0] v_counter_val;
 reg shift_reg_load;
 reg [7:0] shift_reg_in;
 wire shift_reg_out;
+wire shift_reg_enable;
+
+assign shift_reg_enable = h_counter_val < `DISPLAY_WIDTH && v_counter_val < `DISPLAY_HEIGHT;
+
 shift_reg glyph_row(
     .clk(clk),
     .data_in(shift_reg_in),
     .data_in_enable(shift_reg_load),
-    .shift_enable(1),
+    .shift_enable(shift_reg_enable),
     .data_out(shift_reg_out)
 );
 
@@ -101,7 +105,7 @@ end
 
 always_ff @(posedge clk) begin
     if (h_counter_val < `DISPLAY_WIDTH && v_counter_val < `DISPLAY_HEIGHT) begin
-        if (h_counter_val % 8 == 0) begin
+        if (h_counter_val % 8 == 6) begin
             shift_reg_in <= glyph_data[{9'b0,v_counter_val[2:0]}];
             shift_reg_load <= 1;
         end else begin
@@ -117,17 +121,18 @@ always_ff @(posedge clk) begin
             green_out <= 0;
             blue_out <= 0;
         end
+
+    end else shift_reg_load <= 0;
+
+    h_counter_val <= (h_counter_val + 1) % 800;
+
+    if (h_counter_val == 799) begin
+        v_counter_val <= (v_counter_val + 1) % 525;
     end
 
-    h_counter_val <= h_counter_val + 1;
-
-    if (h_counter_val == 800) begin
-        h_counter_val <= 0;
-        v_counter_val <= v_counter_val + 1;
-    end
-
-    if (v_counter_val == 525) begin
-        v_counter_val <= 0;
+    if (h_counter_val == 798 && v_counter_val < `DISPLAY_HEIGHT) begin
+        shift_reg_in <= glyph_data[{9'b0,v_counter_val[2:0] + 3'b1}];
+        shift_reg_load <= 1;
     end
 end
 
