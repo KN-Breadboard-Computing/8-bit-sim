@@ -59,6 +59,9 @@ initial begin
     integer file, i;
     file = $fopen(`"`FONT_PATH/font.bin`", "rb");
 
+    // display path
+    $display("Font path: %s", `"`FONT_PATH/font.bin`");
+
     if (file == 0) begin
         $display("Error opening file");
         $finish;
@@ -126,6 +129,7 @@ always_ff @(posedge clk) begin
 
     h_counter_val <= (h_counter_val + 1) % 800;
 
+
     if (h_counter_val == 799) begin
         v_counter_val <= (v_counter_val + 1) % 525;
     end
@@ -139,3 +143,4 @@ end
 endmodule
 
 /* verilator lint_on UNUSEDSIGNAL */
+

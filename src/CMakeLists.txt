@@ -30,7 +30,7 @@ function (add_module MODULE_NAME)
             cmake_path(ABSOLUTE_PATH RES OUTPUT_VARIABLE RES_PATH)
             set(DST_PATH "$<TARGET_FILE_DIR:${MODULE_NAME}>/${RES}")
             message("Resource ${RES} -> ${DST_PATH}")
-            
+
             add_custom_command(TARGET ${MODULE_NAME} PRE_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink ${RES_PATH} ${DST_PATH})
 
             math(EXPR IDX "${IDX} + 1")
@@ -57,5 +57,7 @@ add_module(ALU SOURCES cpu/alu.sv)
 add_module(CONTROL_UNIT SOURCES cpu/control_unit.v RESOURCE_DIRS roms -DROMS_PATH)
 add_module(RAM SOURCES adapters/ram_adapter.sv basics/ram.sv PREFIX Vram TOP_MODULE ram_adapter)
 add_module(MEM_UNIT SOURCES adapters/mem_unit_adapter.sv cpu/mem_unit.sv PREFIX Vmem_unit TOP_MODULE mem_unit_adapter)
+add_module(MODCOUNTER SOURCES gpu/modcounter.sv PREFIX Vmodcounter TOP_MODULE modcounter)
+add_module(MODCOUNTER_TEST_WRAPPER SOURCES gpu/modcounter.sv gpu/modcounter_test_wrapper.sv PREFIX Vmodcounter_test_wrapper TOP_MODULE modcounter_test_wrapper)
 add_module(GPU SOURCES basics/shift_reg.sv gpu/gpu.sv RESOURCE_DIRS font -DFONT_PATH PREFIX Vgpu TOP_MODULE gpu)
 add_module(TMP SOURCES cpu/tmp.sv adapters/tmp_adapter.sv PREFIX Vtmp TOP_MODULE tmp_adapter)
