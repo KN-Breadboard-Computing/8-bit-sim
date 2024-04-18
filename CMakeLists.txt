@@ -55,6 +55,8 @@ if(ENABLE_CLANG_TIDY)
   endif()
 endif()
 
+set(RESOURCES_DIR "${CMAKE_SOURCE_DIR}/resources")
+
 add_subdirectory(external)
 add_subdirectory(src)
 add_subdirectory(simulator)

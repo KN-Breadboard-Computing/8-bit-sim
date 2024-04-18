@@ -28,10 +28,8 @@ function (add_module MODULE_NAME)
         while (IDX LESS LEN)
             list(GET ADD_MODULE_RESOURCE_DIRS ${IDX} RES)
             cmake_path(ABSOLUTE_PATH RES OUTPUT_VARIABLE RES_PATH)
-            set(DST_PATH "$<TARGET_FILE_DIR:${MODULE_NAME}>/${RES}")
+            set(DST_PATH "${RESOURCES_DIR}/${RES}")
             message("Resource ${RES} -> ${DST_PATH}")
-
-            add_custom_command(TARGET ${MODULE_NAME} PRE_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink ${RES_PATH} ${DST_PATH})
 
             math(EXPR IDX "${IDX} + 1")
 

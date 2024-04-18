@@ -55,11 +55,14 @@ shift_reg glyph_row(
     .data_out(shift_reg_out)
 );
 
+
 initial begin
+    string file_str = `"`FONT_PATH/font.bin`";
     integer file, i;
-    file = $fopen(`"`FONT_PATH/font.bin`", "rb");
+    file = $fopen(file_str, "rb");
 
     // display path
+    $display("Font path: %s", file_str);
     $display("Font path: %s", `"`FONT_PATH/font.bin`");
 
     if (file == 0) begin
