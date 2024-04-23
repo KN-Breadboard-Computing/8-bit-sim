@@ -2,7 +2,10 @@ set(EXEC_NAME "simulator")
 
 find_package(raylib 4.5 REQUIRED)
 
-add_executable(${EXEC_NAME} main.cpp)
+add_executable(${EXEC_NAME} main.cpp
+        ps2.cpp
+        ps2.hpp
+        ps2Lookup.hpp)
 
 set(MAIN_FLAGS ${COMPILE_FLAGS})
 
