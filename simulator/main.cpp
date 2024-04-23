@@ -14,7 +14,8 @@ constexpr static uint32_t scale = 2u;
 
 constexpr static auto scaled_width = static_cast<uint32_t>(screen_width * scale);
 constexpr static auto scaled_height = static_cast<uint32_t>(screen_height * scale);
-auto logs = std::ofstream{"logs.txt"};
+
+//auto logs = std::ofstream{"logs.txt"};
 
 void handle_input() {
     static auto pressed_keys = std::vector<KeyboardKey>{};
@@ -64,10 +65,76 @@ void set_pixel(std::span<Color> pixels, uint32_t x, uint32_t y, Color color) {
     }
 }
 
+template <typename T>
+concept ClockableModule = requires(T module) {
+    module.eval();
+    module.clk;
+};
+
+struct ClockBase {
+    virtual void tick() = 0;
+    virtual void advance(uint32_t delta) = 0;
+    virtual auto get_time_till_next_tick() const -> uint32_t = 0;
+};
+
+template <ClockableModule T> struct Clock : ClockBase {
+    Clock(uint32_t period, T *module) : period{period}, module(module) {}
+
+    void tick() override {
+        time_since_last_tick = 0u;
+        module->clk = posedge;
+        module->eval();
+        posedge = !posedge;
+    }
+
+    void advance(uint32_t delta) override {
+        time_since_last_tick += delta;
+
+        if (time_since_last_tick == period) {
+            tick();
+            return;
+        }
+
+        std::cerr << "Clock overshot by " << time_since_last_tick - period << " cycles\n";
+    }
+
+    auto get_time_till_next_tick() const -> uint32_t override { return period - time_since_last_tick; }
+
+    const uint32_t period;
+
+  private:
+    T *module;
+
+    bool posedge = false;
+    uint32_t time_since_last_tick = 0u;
+};
+
+struct ClockScheduler {
+    void add_clock(ClockBase *clock) { clocks.push_back(clock); }
+    void advance() {
+        auto min_time = std::numeric_limits<uint32_t>::max();
+
+        for (auto clock : clocks) {
+            const auto time = clock->get_time_till_next_tick();
+            min_time = std::min(min_time, time);
+        }
+
+        for (auto clock : clocks) {
+            clock->advance(min_time);
+        }
+    }
+
+    std::vector<ClockBase *> clocks;
+};
+
 auto main() -> int {
     auto gpu = Vgpu{};
+    auto gpu_clock = Clock{1, &gpu};
+    auto clock_scheduler = ClockScheduler{};
+    clock_scheduler.add_clock(&gpu_clock);
 
     auto pixels = std::array<Color, scaled_width * scaled_height>{};
+
     InitWindow(scaled_width, scaled_height, "Hello World!");
 
     unsigned int v_counter = 0u;
@@ -86,18 +153,13 @@ auto main() -> int {
         // if space released
         if (IsKeyReleased(KEY_SPACE)) {
             for (int i = 0; i < 800 * 525; i++) {
-                gpu.clk = 0;
-                gpu.eval();
-                gpu.clk = 1;
-                gpu.eval();
+                clock_scheduler.advance();
+                clock_scheduler.advance();
 
                 if (v_counter < screen_height && h_counter < screen_width) {
                     const auto red = gpu.red_out;
                     const auto blue = gpu.blue_out;
                     const auto green = gpu.green_out;
-                    const auto is_black = gpu.red_out == 0 && gpu.blue_out == 0 && gpu.green_out == 0;
-                    // logs << "x: " << h_counter << ", y: " << v_counter << ", color: " << (is_black ? 0 : 1)
-                    //      << std::endl;
                     set_pixel(pixels, h_counter, v_counter, Color{red, green, blue, 255});
                 }
 
