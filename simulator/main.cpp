@@ -3,9 +3,9 @@
 #include <array>
 #include <fstream>
 #include <span>
-#include <optional>
 #include <format>
 #include "ps2.hpp"
+#include <iostream>
 
 constexpr static uint32_t screen_width = 640u;
 constexpr static uint32_t screen_height = 480u;
@@ -65,7 +65,7 @@ void set_pixel(std::span<Color> pixels, uint32_t x, uint32_t y, Color color) {
     }
 }
 
-template <typename T>
+template<typename T>
 concept ClockableModule = requires(T module) {
     module.eval();
     module.clk;
@@ -73,11 +73,14 @@ concept ClockableModule = requires(T module) {
 
 struct ClockBase {
     virtual void tick() = 0;
+
     virtual void advance(uint32_t delta) = 0;
+
     virtual auto get_time_till_next_tick() const -> uint32_t = 0;
 };
 
-template <ClockableModule T> struct Clock : ClockBase {
+template<ClockableModule T>
+struct Clock : ClockBase {
     Clock(uint32_t period, T *module) : period{period}, module(module) {}
 
     void tick() override {
@@ -102,7 +105,7 @@ template <ClockableModule T> struct Clock : ClockBase {
 
     const uint32_t period;
 
-  private:
+private:
     T *module;
 
     bool posedge = false;
@@ -111,15 +114,16 @@ template <ClockableModule T> struct Clock : ClockBase {
 
 struct ClockScheduler {
     void add_clock(ClockBase *clock) { clocks.push_back(clock); }
+
     void advance() {
         auto min_time = std::numeric_limits<uint32_t>::max();
 
-        for (auto clock : clocks) {
+        for (auto clock: clocks) {
             const auto time = clock->get_time_till_next_tick();
             min_time = std::min(min_time, time);
         }
 
-        for (auto clock : clocks) {
+        for (auto clock: clocks) {
             clock->advance(min_time);
         }
     }
