@@ -3,7 +3,9 @@
 #include <cstdint>
 #include <vector>
 #include <queue>
+#include <optional>
 #include "raylib.h"
+
 namespace ps2{
     struct Packet{
         std::array<bool,11> data{};
