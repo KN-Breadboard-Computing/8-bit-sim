@@ -1,3 +1,5 @@
+`include "gpu/modcounter.sv"
+`include "basics/counter.v"
 `define DISPLAY_WIDTH 640
 `define DISPLAY_HEIGHT 480
 `define TEXT_MODE_WIDTH 80
@@ -40,21 +42,64 @@ reg [5:0] text_mode_cursor_y; // [0,TEXT_MODE_HEIGHT - 1]
 reg [9:0] h_counter_val;
 reg [9:0] v_counter_val;
 
-reg shift_reg_load;
+wire v_counter_clk;
+wire [9:0] pixel_x;
+wire [9:0] pixel_y;
+wire [18:0] pixel;
+
+wire shift_reg_load;
 reg [7:0] shift_reg_in;
 wire shift_reg_out;
-wire shift_reg_enable;
+//wire shift_reg_enable;
+wire visible_area;
+wire load_pixel;
 
-assign shift_reg_enable = h_counter_val < `DISPLAY_WIDTH && v_counter_val < `DISPLAY_HEIGHT;
+//assign shift_reg_enable = h_counter_val < `DISPLAY_WIDTH && v_counter_val < `DISPLAY_HEIGHT;
+//assign shift_reg_clk = clk & v_counter_val < `DISPLAY_HEIGHT;
+assign visible_area = pixel_x < `DISPLAY_WIDTH && pixel_y < `DISPLAY_HEIGHT;
+assign load_pixel = visible_area && ((pixel_x & 7) == 7);
+assign shift_reg_load = visible_area && ((pixel_x & 7) == 0);
+
+assign red_out = shift_reg_out ? 255 : 0;
+assign blue_out = shift_reg_out ? 255 : 0;
+assign green_out = shift_reg_out ? 255 : 0;
 
 shift_reg glyph_row(
     .clk(clk),
     .data_in(shift_reg_in),
     .data_in_enable(shift_reg_load),
-    .shift_enable(shift_reg_enable),
+    .shift_enable(visible_area),
     .data_out(shift_reg_out)
 );
 
+modcounter #(.rst_value(799), .width(10)) h_counter (
+    .clk(clk),
+    .overflow(v_counter_clk),
+    .data_out(pixel_x)
+);
+
+wire v_counter_ov;
+
+/* verilator lint_off PINMISSING */
+modcounter #(.rst_value(524), .width(10)) v_counter (
+    .clk(v_counter_clk),
+    .overflow(v_counter_ov),
+    .data_out(pixel_y)
+);
+/* verilator lint_on PINMISSING */
+
+counter #(.width(19)) px_counter (
+    .clk(clk & visible_area),
+    .write(1'b0),
+    .reset(v_counter_ov),
+    .countdown(1'b0),
+    .in(19'b0),
+    .out(pixel)
+);
+
+always_ff @(posedge load_pixel) begin
+    shift_reg_in <= glyph_data[{9'b0,pixel[2:0]}];
+end
 
 initial begin
     string file_str = `"`FONT_PATH/font.bin`";
@@ -109,38 +154,44 @@ always_ff @(posedge interrupt_enable) begin
     endcase
 end
 
-always_ff @(posedge clk) begin
-    if (h_counter_val < `DISPLAY_WIDTH && v_counter_val < `DISPLAY_HEIGHT) begin
-        if (h_counter_val % 8 == 6) begin
-            shift_reg_in <= glyph_data[{9'b0,v_counter_val[2:0]}];
-            shift_reg_load <= 1;
-        end else begin
-            shift_reg_load <= 0;
-        end
-        // $display("shift_reg_out: %b", shift_reg_out);
-        if (shift_reg_out == 1) begin
-            red_out <= 255;
-            green_out <= 255;
-            blue_out <= 255;
-        end else begin
-            red_out <= 0;
-            green_out <= 0;
-            blue_out <= 0;
-        end
+//always_ff @(posedge clk) begin
+//    if (h_counter_val < `DISPLAY_WIDTH && v_counter_val < `DISPLAY_HEIGHT) begin
+//        //if ((h_counter_val & 10'h07) == 7) begin
+//        if (h_counter_val % 8 == 6) begin
+//            shift_reg_in <= glyph_data[{9'b0,v_counter_val[2:0]}];
+//            shift_reg_load <= 1;
+//        end else begin
+//            shift_reg_load <= 0;
+//        end
+//        // $display("shift_reg_out: %b", shift_reg_out);
+//        if (shift_reg_out == 1) begin
+//            red_out <= 255;
+//            green_out <= 255;
+//            blue_out <= 255;
+//        end else begin
+//            red_out <= 0;
+//            green_out <= 0;
+//            blue_out <= 0;
+//        end
+//
+//    end else shift_reg_load <= 0;
+//
+//    h_counter_val <= (h_counter_val + 1) % 800;
+//
+//
+//    if (h_counter_val == 799) begin
+//        v_counter_val <= (v_counter_val + 1) % 525;
+//    end
+//
+//    if (h_counter_val == 798 && v_counter_val < `DISPLAY_HEIGHT) begin
+//        shift_reg_in <= glyph_data[{9'b0,v_counter_val[2:0] + 3'b1}];
+//        shift_reg_load <= 1;
+//    end
+//end
 
-    end else shift_reg_load <= 0;
-
-    h_counter_val <= (h_counter_val + 1) % 800;
-
-
-    if (h_counter_val == 799) begin
-        v_counter_val <= (v_counter_val + 1) % 525;
-    end
-
-    if (h_counter_val == 798 && v_counter_val < `DISPLAY_HEIGHT) begin
-        shift_reg_in <= glyph_data[{9'b0,v_counter_val[2:0] + 3'b1}];
-        shift_reg_load <= 1;
-    end
+initial begin
+    //$dumpfile("gpu.fst");
+    //$dumpvars(0, gpu);
 end
 
 endmodule

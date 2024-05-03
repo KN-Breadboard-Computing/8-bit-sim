@@ -15,6 +15,7 @@ module ram #(
     always_ff @(negedge write_enable or address) begin
         /* verilator lint_off SYNCASYNCNET */
         if (~chip_enable & chip_enable2 & ~write_enable) begin
+            $display("[ram] wrote = %02x @ %04x", data, address);
             storage[address] <= data;
         end
         /* verilator lint_on SYNCASYNCNET */
