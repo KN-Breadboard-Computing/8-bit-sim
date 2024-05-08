@@ -58,7 +58,7 @@ wire load_pixel;
 //assign shift_reg_clk = clk & v_counter_val < `DISPLAY_HEIGHT;
 assign visible_area = pixel_x < `DISPLAY_WIDTH && pixel_y < `DISPLAY_HEIGHT;
 assign load_pixel = visible_area && ((pixel_x & 7) == 7);
-assign shift_reg_load = visible_area && ((pixel_x & 7) == 0);
+assign shift_reg_load = (visible_area && ((pixel_x & 7) == 7)) || v_counter_clk;
 
 assign red_out = shift_reg_out ? 255 : 0;
 assign blue_out = shift_reg_out ? 255 : 0;
@@ -97,7 +97,7 @@ counter #(.width(19)) px_counter (
     .out(pixel)
 );
 
-always_ff @(posedge load_pixel) begin
+always_ff @(posedge load_pixel || v_counter_clk) begin
     shift_reg_in <= glyph_data[{9'b0,pixel[2:0]}];
 end
 
