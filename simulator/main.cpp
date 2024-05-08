@@ -81,7 +81,7 @@ struct ClockBase {
 template <ClockableModule T> struct Clock : ClockBase {
     Clock(T *module, uint32_t pos_period, uint32_t neg_period = 0, bool should_start_posedge = false)
         : pos_period{pos_period}, neg_period{neg_period}, module(module), is_posedge{should_start_posedge} {
-        assert(pos_period == 0u && neg_period == 0u);
+        assert(!(pos_period == 0u && neg_period == 0u));
     }
 
     void tick() override {
