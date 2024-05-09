@@ -26,8 +26,18 @@ module mem_unit(
         .data(data_bus)
     );
 
-    always_ff @(posedge reg_mar_load) mar <= address;
-    always_ff @(posedge reg_mbr_load) mbr <= data;
+    initial begin
+        $display("[mem] mar = %04x, mbr = %02x", mar, mbr);
+    end
+
+    always_ff @(posedge reg_mar_load) begin
+        mar <= address;
+        $display("[mem] mar = %04x, mbr = %02x", mar, mbr);
+    end
+    always_ff @(posedge reg_mbr_load) begin
+        mbr <= data;
+        $display("[mem] mar = %04x, mbr = %02x", mar, mbr);
+    end
     
     assign data = ~reg_mbr_word_dir ? data_bus : 8'hZ; 
     assign data_bus = (~mem_in & mem_out) ? mbr : 8'hZ;

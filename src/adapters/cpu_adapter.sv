@@ -1,6 +1,7 @@
 module cpu_adapter(
     input wire clk,
     input wire rst,
+    input wire [4:0] int_in,
     output wire zero_page,
     output wire mem_part,
     output wire mem_out,
@@ -20,6 +21,7 @@ module cpu_adapter(
     cpu cpu(
         .clk(clk),
         .rst(rst),
+        .int_in(int_in),
         .zero_page(zero_page),
         .mem_part(mem_part),
         .mem_out(mem_out),

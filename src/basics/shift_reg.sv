@@ -3,7 +3,7 @@ module shift_reg (
     input wire [7:0] data_in,
     input wire data_in_enable,
     input wire shift_enable,
-    output reg data_out
+    output wire data_out
 );
 
 reg [7:0] register;

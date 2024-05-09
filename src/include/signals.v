@@ -45,3 +45,4 @@
 `define INT2                    'd44
 `define INT3                    'd45
 `define INT4                    'd46
+`define INT_ADDRESS_OUT         'd47

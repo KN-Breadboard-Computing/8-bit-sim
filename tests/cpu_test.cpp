@@ -118,10 +118,10 @@ TEST_CASE("Mov works") {
         0x07,             // mov b, tl       | 3
         0x01,             // mov a, b        | 3
         0x19, 0xDE, 0xAD, // mov [0xDEAD], a | 8
-        0x19, 0xBE, 0xEF,  // mov [0xBEEF], a | 8
-        0x11, 0x33,
-        0x19, 0xCA, 0xFE,  // mov [0xCAFE], a | 8
-        0xD8
+        0x19, 0xBE, 0xEF, // mov [0xBEEF], a | 8
+        0x11, 0x33,       // mov a, 0x33     | 4
+        0x19, 0xCA, 0xFE, // mov [0xCAFE], a | 8
+        0xD9              // halt            | 2
     };
 
     // Copy program to memory
@@ -137,61 +137,23 @@ TEST_CASE("Mov works") {
         clk = !clk;
         cpu.clk = clk;
         cpu.eval();
-        printf("[cpu] eval 1 clk = %d\n", clk);
         ctx->timeInc(1);
         mem.zero_page = cpu.zero_page;
         mem.mem_part = cpu.mem_part;
         mem.mem_in = cpu.mem_in;
-        if (!mem.mem_in) printf("MEM IN\n");
-        printf("mem_in = %d, mem_out = %d, load_mar = %d, load_mbr = %d\n", cpu.mem_in, cpu.mem_out, cpu.reg_mar_load, cpu.reg_mbr_load);
         mem.mem_out = cpu.mem_out;
         mem.reg_mbr_load = cpu.reg_mbr_load & clk;
         mem.reg_mbr_word_dir = cpu.reg_mbr_word_dir;
         mem.reg_mar_load = cpu.reg_mar_load & clk;
-        mem.data_in_en = cpu.reg_mbr_load; //((cpu.reg_mbr_word_dir & ~cpu.mem_in) | cpu.reg_mbr_load) & 1;
-        printf("mem.data_in_en = %u\n", mem.data_in_en); 
+        mem.data_in_en = cpu.reg_mbr_load;
         mem.data_in = cpu.bus_out;
         mem.address = cpu.addr_bus;
-        printf("[cpu] bus_in_en = %d\n", cpu.bus_in_en);
-        printf("[mem] data_in = %02x, addr = %04x\n", mem.data_in, mem.address);
-        printf("[cpu] %02x %04x\n", cpu.bus_out, cpu.addr_bus);
         mem.eval();
-        printf("[mem] eval 1\n");
-        // reg_mbr_word_dir
-        // 1 = CPU -> MEM
-        // 0 = MEM -> CPU
         cpu.bus_in_en = (~mem.mem_out & 1);
         cpu.bus_in = mem.data_out;
-        printf("[mem] %02x\n", mem.data_out);
         cpu.eval();
-        printf("[cpu] eval 2\n");
-        printf("[cpu] %02x\n", cpu.bus_out);
         ctx->timeInc(1);
     }
-
-    //// 6 cycles for MOVATABSA
-    //for (size_t i = 0; i < 12; i++) {
-    //    clk = !clk;
-    //    cpu.clk = clk;
-    //    cpu.eval();
-    //    mem.zero_page = cpu.zero_page;
-    //    mem.mem_part = cpu.mem_part;
-    //    mem.mem_in = cpu.mem_in;
-    //    mem.mem_out = cpu.mem_out;
-    //    mem.reg_mbr_load = cpu.reg_mbr_load;
-    //    mem.reg_mbr_word_dir = cpu.reg_mbr_word_dir;
-    //    mem.reg_mar_load = cpu.reg_mar_load;
-    //    mem.data_in_en = cpu.reg_mbr_word_dir;
-    //    mem.data_in = cpu.bus_out;
-    //    mem.address = cpu.addr_bus;
-    //    printf("[cpu] %02x %04x\n", cpu.bus_out, cpu.addr_bus);
-    //    mem.eval();
-    //    cpu.bus_in_en = ~cpu.reg_mbr_word_dir;
-    //    cpu.bus_in = mem.data_out;
-    //    printf("[mem] %02x\n", mem.data_out);
-    //    cpu.eval();
-    //    printf("[cpu] %02x\n", cpu.bus_out);
-    //}
 
     load_mar_mbr(mem, 0xDEAD, 0x00);
     mem.eval();
@@ -205,12 +167,117 @@ TEST_CASE("Mov works") {
 
     load_mem(mem);
     mem.eval();
-    CHECK_MESSAGE(mem.data_out, 0x05, "read @ 0xBEEF");
+    CHECK_MESSAGE(mem.data_out == 0x05, "read @ 0xBEEF");
 
     load_mar_mbr(mem, 0xCAFE, 0x00);
     mem.eval();
 
     load_mem(mem);
     mem.eval();
-    CHECK_MESSAGE(mem.data_out, 0x33, "read @ 0xCAFE");
+    CHECK_MESSAGE(mem.data_out == 0x33, "read @ 0xCAFE");
+}
+
+TEST_CASE("Handling INT0 works") {
+    VerilatedContext* ctx = new VerilatedContext;
+    Vmem_unit mem;
+    Vcpu cpu(ctx, "cpu");
+
+    ctx->debug(0);
+    ctx->traceEverOn(true);
+
+    reset(mem);
+    mem.eval();
+
+    bool clk = false;
+    cpu.clk = clk;
+    cpu.bus_in_en = 0;
+    cpu.bus_in = 0;
+    cpu.rst = 0;
+    cpu.int_in = 0x00;
+    cpu.eval();
+    ctx->timeInc(1);
+    clk = !clk;
+    cpu.clk = clk;
+    cpu.bus_in_en = 0;
+    cpu.bus_in = 0;
+    cpu.rst = 0;
+    cpu.eval();
+    ctx->timeInc(1);
+
+    cpu.rst = 1;
+
+    uint8_t prog[] = { 
+        0xD4,             // nop             | 3
+        0xD4,             // nop             | 3
+        0xD4,             // nop             | 3
+        0xD4,             // nop             | 3
+        0xD4,             // nop             | 3
+        0xD4,             // nop             | 3
+        0xD4,             // nop             | 3
+        0xD4,             // nop             | 3
+        0xD9              // hlt             | 2
+    };
+
+    uint8_t isr0[] = {
+        0x11, 0x73,       // mov a, 0x73     | 4
+        0x19, 0xDE, 0xAD, // mov [0xCAFE], a | 8
+        0xD9              // hlt
+    };
+
+    // Copy program to memory
+    for (size_t i = 0; i < sizeof(prog); i++) {
+        load_mar_mbr(mem, 0x0000 + i, prog[i]);
+        mem.eval();
+
+        load_mbr_to_mem(mem);
+        mem.eval();
+    }
+
+    for (size_t i = 0; i < sizeof(isr0); i++) {
+        load_mar_mbr(mem, 0xA0B0 + i, isr0[i]);
+        mem.eval();
+
+        load_mbr_to_mem(mem);
+        mem.eval();
+    }
+
+    // set ISR0 address
+    load_mar_mbr(mem, 0xFFF2, 0xA0);
+    mem.eval();
+    load_mbr_to_mem(mem);
+    mem.eval();
+    load_mar_mbr(mem, 0xFFF3, 0xB0);
+    mem.eval();
+    load_mbr_to_mem(mem);
+    mem.eval();
+
+    for (size_t i = 0; i < 256; i++) {
+        if (i == 12) cpu.int_in = 0x01;
+        clk = !clk;
+        cpu.clk = clk;
+        cpu.eval();
+        ctx->timeInc(1);
+        mem.zero_page = cpu.zero_page;
+        mem.mem_part = cpu.mem_part;
+        mem.mem_in = cpu.mem_in;
+        mem.mem_out = cpu.mem_out;
+        mem.reg_mbr_load = cpu.reg_mbr_load & clk;
+        mem.reg_mbr_word_dir = cpu.reg_mbr_word_dir;
+        mem.reg_mar_load = cpu.reg_mar_load & clk;
+        mem.data_in_en = cpu.reg_mbr_load;
+        mem.data_in = cpu.bus_out;
+        mem.address = cpu.addr_bus;
+        mem.eval();
+        cpu.bus_in_en = (~mem.mem_out & 1);
+        cpu.bus_in = mem.data_out;
+        cpu.eval();
+        ctx->timeInc(1);
+    }
+
+    load_mar_mbr(mem, 0xDEAD, 0x00);
+    mem.eval();
+
+    load_mem(mem);
+    mem.eval();
+    CHECK_MESSAGE(mem.data_out == 0x73, "read @ 0xDEAD");
 }

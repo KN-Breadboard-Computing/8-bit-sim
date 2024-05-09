@@ -1,6 +1,7 @@
 module cpu (
     input wire clk,
     input wire rst, // active low
+    input wire [4:0] int_in,
     output wire zero_page,
     output wire mem_part,
     output wire mem_out,
@@ -16,32 +17,41 @@ module cpu (
 
     `include "include/signals.v"
 
+    initial begin
+        $monitor("[cpu/inter] clk = %1b, data = %02h, bus = %02h", clk, data_bus, bus);
+    end
+
     /* verilator lint_off UNOPTFLAT */
     wire [7:0] bus;
     /* verilator lint_on UNOPTFLAT */
     wire [7:0] flags;
     wire [15:0] addr;
+    /* verilator lint_off UNUSEDSIGNAL */
+    wire [4:0] irq_no;
 
     // SIGNAL REGISTER
-    /* verilator lint_off UNUSEDSIGNAL */
-    wire [46:0] signals;
+    wire [47:0] signals;
     /* verilator lint_on UNUSEDSIGNAL */
 
     control_unit ctrl_unit(
         .clk(clk),
         .not_clk(~clk),
         .rst(rst),
+        .int_in(int_in),
         .reg_ir_load_override(1'b0),
         .mcc_rst_override(1'b1),
         .data(bus),
         .flags(flags),
-        .signals(signals)
+        .signals(signals),
+        .irq_no(irq_no)
     );
+
+    assign addr = signals[`INT_ADDRESS_OUT] ? { {12{1'b1}}, (irq_no[3] | irq_no[4]), (~irq_no[4] & ~irq_no[3] & irq_no[1]) | (~irq_no[4] & ~irq_no[3] & irq_no[2]), (~irq_no[3] & ~irq_no[1]) | (~irq_no[3] & irq_no[2]) | irq_no[4], 1'b0 } : 16'hZ;
 
     // PROGRAM COUNTER
     wire [15:0] pc_out;
     counter #(.width(16)) pc(
-        .clk(signals[`PC_TICK]),
+        .clk((signals[`PC_TICK] | ~signals[`PC_LOAD]) & clk),
         .write(~signals[`PC_LOAD]),
         .reset(~signals[`PC_RST]),
         .countdown(1'b0),
