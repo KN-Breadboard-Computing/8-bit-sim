@@ -34,7 +34,7 @@ reg active_buf;
 
 // NOTE: glyph_data[glyph_number + x%8 + (y%8 * 8)] = 1 <=> FG color
 //       glyph_data[glyph_number + x%8 + (y%8 * 8)] = 0 <=> BG color
-reg [7:0] glyph_data [0:(`GLYPH_COUNT / 8) * `GLYPH_WIDTH * `GLYPH_HEIGHT];
+reg [7:0] glyph_data [0:(`GLYPH_COUNT * `GLYPH_WIDTH * `GLYPH_HEIGHT) / 8 - 1];
 
 reg [6:0] text_mode_cursor_x; // [0,TEXT_MODE_WIDTH - 1]
 reg [5:0] text_mode_cursor_y; // [0,TEXT_MODE_HEIGHT - 1]
@@ -98,9 +98,7 @@ counter #(.width(19)) px_counter (
 );
 
 always_ff @(posedge load_pixel || v_counter_clk) begin
-    shift_reg_in <= glyph_data[{9'b0, pixel[2:0]}];
-    // display glyph_buffers[text_mode_cursor_x + text_mode_cursor_y * `TEXT_MODE_WIDTH][active_buf] if not 0
-    // shift_reg_in <= glyph_data[{1'b0,glyph_buffers[text_mode_cursor_x + text_mode_cursor_y * `TEXT_MODE_WIDTH][active_buf],pixel[2:0]}];
+    shift_reg_in <= glyph_data[{glyph_buffers[pixel_x / 8 + (pixel_y / 8) * `TEXT_MODE_WIDTH][active_buf], pixel[2:0]}];
 end
 
 initial begin
