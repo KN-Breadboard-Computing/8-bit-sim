@@ -17,8 +17,8 @@
 
 module gpu(
     input wire clk,
-    input wire [1:0] interrupt_in,
-    input wire [7:0] data_in,
+    input wire [1:0] interrupt_code_in,
+    input wire [7:0] interrupt_data_in,
     input wire interrupt_enable,
     output reg [7:0] red_out,
     output reg [7:0] green_out,
@@ -98,7 +98,9 @@ counter #(.width(19)) px_counter (
 );
 
 always_ff @(posedge load_pixel || v_counter_clk) begin
-    shift_reg_in <= glyph_data[{9'b0,pixel[2:0]}];
+    shift_reg_in <= glyph_data[{9'b0, pixel[2:0]}];
+    // display glyph_buffers[text_mode_cursor_x + text_mode_cursor_y * `TEXT_MODE_WIDTH][active_buf] if not 0
+    // shift_reg_in <= glyph_data[{1'b0,glyph_buffers[text_mode_cursor_x + text_mode_cursor_y * `TEXT_MODE_WIDTH][active_buf],pixel[2:0]}];
 end
 
 initial begin
@@ -108,17 +110,12 @@ initial begin
 
     // display path
     $display("Font path: %s", file_str);
-    $display("Font path: %s", `"`FONT_PATH/font.bin`");
 
     if (file == 0) begin
         $display("Error opening file");
         $finish;
     end
     $fread(glyph_data, file);
-
-    for (i = 0; i < 8; i = i + 1) begin
-        $display("%8b", glyph_data[i]);
-    end
 
     text_mode_cursor_x = 0;
     text_mode_cursor_y = 0;
@@ -128,29 +125,51 @@ initial begin
 end
 
 always_ff @(posedge interrupt_enable) begin
-    case (interrupt_in)
+    integer i;
+    case (interrupt_code_in)
         `SIG_STORE_BYTE: begin
-            glyph_buffers[text_mode_cursor_x + text_mode_cursor_y * `TEXT_MODE_WIDTH][1 - active_buf] <= data_in;
+            $display("=====================================");
+            $display("writing to buffer: ", 1 - active_buf);
+            $display("cursor: %d %d", text_mode_cursor_x, text_mode_cursor_y);
+            $display("character: %d", interrupt_data_in);
+            $display("=====================================");
+            glyph_buffers[text_mode_cursor_x + text_mode_cursor_y * `TEXT_MODE_WIDTH][1 - active_buf] <= interrupt_data_in;
             text_mode_cursor_x <= text_mode_cursor_x + 1;
-            if (text_mode_cursor_x == `TEXT_MODE_WIDTH) begin
+            if ((text_mode_cursor_x + 1) == `TEXT_MODE_WIDTH) begin
                 text_mode_cursor_x <= 0;
                 text_mode_cursor_y <= text_mode_cursor_y + 1;
-                if (text_mode_cursor_y == `TEXT_MODE_HEIGHT) begin
+                if ((text_mode_cursor_y + 1) == `TEXT_MODE_HEIGHT) begin
                     text_mode_cursor_y <= 0;
                 end
             end
-       end
-       `SIG_MOVE_CURSOR:
-       // depending on the MSB either move x or y
-       if (data_in[7]) begin
-           text_mode_cursor_x <= text_mode_cursor_x + data_in[6:0];
-       end else begin
-           text_mode_cursor_y <= text_mode_cursor_y + data_in[5:0];
-       end
-       `SIG_DISPLAY: begin
+        end
+        `SIG_MOVE_CURSOR:
+        // depending on the MSB either move x or y
+        if (interrupt_data_in[7]) begin
+           text_mode_cursor_x <= text_mode_cursor_x + interrupt_data_in[6:0];
+        end else begin
+           text_mode_cursor_y <= text_mode_cursor_y + interrupt_data_in[5:0];
+        end
+        `SIG_DISPLAY: begin
            active_buf <= 1 - active_buf;
-       end
-       `SIG_CLEAR: $display("Interrupt 3");
+           $display("Active buffer: %d", 1 - active_buf);
+        end
+        // temporarily serves as state dump
+        `SIG_CLEAR: begin
+            $display("=====================================");
+            $display("state dump:");
+            $display("cursor: %d %d", text_mode_cursor_x, text_mode_cursor_y);
+            // print glyph_buffers[active_buf]
+            $display("glyph buffer:");
+            for (i = 0; i < `TEXT_MODE_WIDTH * `TEXT_MODE_HEIGHT; i = i + 1) begin
+                // if different than 0, print
+                if(glyph_buffers[i][active_buf] != 0)
+                    $display("0x%02x", glyph_buffers[i][active_buf]);
+            end
+            $display("=====================================");
+        end
+
+
     endcase
 end
 

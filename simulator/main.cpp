@@ -161,6 +161,31 @@ auto main() -> int {
 
     while (!WindowShouldClose()) {
         // handle_input(keyboard);
+        
+        if (IsKeyReleased(KEY_A)) {
+            gpu.interrupt_data_in = 48;
+            gpu.interrupt_code_in = 0;
+            gpu.interrupt_enable = 1;
+            gpu.eval();
+            gpu.interrupt_enable = 0;
+            gpu.eval();
+        }
+
+        if (IsKeyReleased(KEY_D)) {
+            gpu.interrupt_code_in = 2;
+            gpu.interrupt_enable = 1;
+            gpu.eval();
+            gpu.interrupt_enable = 0;
+            gpu.eval();
+        }
+
+        if (IsKeyReleased(KEY_S)) {
+            gpu.interrupt_code_in = 3;
+            gpu.interrupt_enable = 1;
+            gpu.eval();
+            gpu.interrupt_enable = 0;
+            gpu.eval();
+        }
 
         if (IsKeyReleased(KEY_SPACE)) {
             for (int i = 0; i < 800 * 525; i++) {
