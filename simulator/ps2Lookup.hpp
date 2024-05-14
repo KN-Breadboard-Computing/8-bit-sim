@@ -1,10 +1,11 @@
 #pragma once
 
+#include <utility>
 #include <variant>
 #include <raylib.h>
 #include <cstdint>
 
-auto key_to_scan_code(KeyboardKey key) -> std::variant<uint8_t, std::pair<uint8_t, uint8_t>> {
+constexpr auto key_to_scan_code(KeyboardKey key) -> std::variant<uint8_t, std::pair<uint8_t, uint8_t>> {
     switch (key) {
         case KEY_APOSTROPHE:
             return static_cast<uint8_t>(0x52);

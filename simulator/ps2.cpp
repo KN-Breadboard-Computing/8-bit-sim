@@ -4,11 +4,11 @@
 
 namespace stdr = std::ranges;
 
-ps2::Packet::Packet(uint8_t value) : data({}) {
+ps2::Packet::Packet(uint8_t value) : data{} {
     bool parity = true;
     data.front() = 0;
     data.back() = 1;
-    for (unsigned i: stdr::iota_view(0, 8)) {
+    for (auto i : stdr::iota_view(0lu, 8lu)) {
         if (value >> (7 - i) & 0x01) {
             data.at(i+1) = 1;
             parity = !parity;
@@ -17,7 +17,7 @@ ps2::Packet::Packet(uint8_t value) : data({}) {
     data.at(9) = parity;
 }
 
-auto ps2::encode_key(KeyboardKey key, bool isRelease) -> std::optional<std::vector<Packet>> {
+auto ps2::Keyboard::encode_key(KeyboardKey key, bool isRelease) -> std::optional<std::vector<Packet>> {
     std::vector<Packet> result;
     if (key == KEY_PRINT_SCREEN) {
         if (isRelease) {

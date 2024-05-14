@@ -17,7 +17,7 @@ constexpr static auto scaled_height = static_cast<uint32_t>(screen_height * scal
 
 // auto logs = std::ofstream{"logs.txt"};
 
-void handle_input() {
+void handle_input(ps2::Keyboard& keyboard) {
     static auto pressed_keys = std::vector<KeyboardKey>{};
     //    auto prt = [&]() -> std::string {
     //        std::string result;
@@ -28,21 +28,21 @@ void handle_input() {
     //    logs << prt();
     auto key = static_cast<KeyboardKey>(GetKeyPressed());
     while (key > 0) {
-        auto ret = ps2::encode_key(key, false);
-        if (ret.has_value()) {
+        const auto packets = keyboard.encode_key(key, false);
+        if (packets.has_value()) {
             pressed_keys.push_back(key);
-            for (auto pac : *ret) {
-                ps2::packets_to_send.push(pac);
+            for (auto pac : *packets) {
+                keyboard.packets_to_send.push(pac);
             }
         }
         key = static_cast<KeyboardKey>(GetKeyPressed());
     }
     for (unsigned i = 0; i < pressed_keys.size(); ++i) {
         if (!IsKeyDown(pressed_keys.at(i))) {
-            auto ret = ps2::encode_key(pressed_keys.at(i), true);
-            if (ret.has_value()) {
-                for (auto pac : *ret) {
-                    ps2::packets_to_send.push(pac);
+            const auto packets = keyboard.encode_key(pressed_keys.at(i), true);
+            if (packets.has_value()) {
+                for (auto pac : *packets) {
+                    keyboard.packets_to_send.push(pac);
                 }
             }
             pressed_keys.erase(pressed_keys.begin() + i--);
@@ -51,7 +51,7 @@ void handle_input() {
 }
 
 // x must be in [0, screen_width) and y in [0, screen_height)
-void set_pixel(std::span<Color> pixels, uint32_t x, uint32_t y, Color color) {
+void set_pixel(const std::span<Color> pixels, uint32_t x, uint32_t y, Color color) {
     if (x >= screen_width || y >= screen_height) {
         return;
     }
@@ -139,7 +139,7 @@ struct ClockScheduler {
 
 auto main() -> int {
     auto gpu = Vgpu{};
-    auto gpu_clock = Clock{&gpu, 1};
+    auto gpu_clock = Clock{&gpu, 1, 0, true};
     auto clock_scheduler = ClockScheduler{};
     clock_scheduler.add_clock(&gpu_clock);
 
@@ -157,10 +157,11 @@ auto main() -> int {
                          .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8};
 
     const auto texture = LoadTextureFromImage(image);
+    auto keyboard = ps2::Keyboard{};
 
     while (!WindowShouldClose()) {
-        handle_input();
-        // if space released
+        // handle_input(keyboard);
+
         if (IsKeyReleased(KEY_SPACE)) {
             for (int i = 0; i < 800 * 525; i++) {
                 clock_scheduler.advance();

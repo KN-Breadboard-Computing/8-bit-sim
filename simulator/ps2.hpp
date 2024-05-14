@@ -11,6 +11,8 @@ namespace ps2{
         std::array<bool,11> data{};
         explicit Packet(uint8_t value);
     };
-    inline std::queue<Packet> packets_to_send;
-    auto encode_key(KeyboardKey key,bool isRelease) -> std::optional<std::vector<Packet>>;
+    struct Keyboard {
+        std::queue<Packet> packets_to_send;
+        auto encode_key(KeyboardKey key,bool isRelease) -> std::optional<std::vector<Packet>>;
+    };
 }
