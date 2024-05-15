@@ -1,7 +1,5 @@
 set(EXEC_NAME "simulator")
 
-find_package(raylib 4.5 REQUIRED)
-
 add_executable(${EXEC_NAME} main.cpp
         ps2.cpp
         ps2.hpp
@@ -16,4 +14,4 @@ endif()
 
 target_compile_options(${EXEC_NAME} PRIVATE ${MAIN_FLAGS})
 
-target_link_libraries(${EXEC_NAME} GPU raylib)
+target_link_libraries(${EXEC_NAME} GPU raylib Imgui)

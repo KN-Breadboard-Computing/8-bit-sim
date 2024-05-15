@@ -5,6 +5,7 @@
 #include <format>
 #include <fstream>
 #include <iostream>
+#include <rlImGui.h>
 #include <span>
 
 constexpr static uint32_t screen_width = 640u;
@@ -158,6 +159,8 @@ auto main() -> int {
 
     const auto texture = LoadTextureFromImage(image);
     auto keyboard = ps2::Keyboard{};
+
+    rlImGuiSetup(true);
 
     while (!WindowShouldClose()) {
         // handle_input(keyboard);
