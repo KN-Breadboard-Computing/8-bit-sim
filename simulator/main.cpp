@@ -4,6 +4,7 @@
 #include <array>
 #include <format>
 #include <fstream>
+#include <imgui.h>
 #include <iostream>
 #include <rlImGui.h>
 #include <span>
@@ -212,9 +213,19 @@ auto main() -> int {
 
         DrawTexture(texture, 0, 0, RAYWHITE);
 
+        rlImGuiBegin();
+        ImGui::Begin("Hello, world!");
+        ImGui::Text("This is some useful text.");
+        ImGui::End();
+        rlImGuiEnd();
+
         // DrawFPS(10, 10);
 
         EndDrawing();
     }
+
+    rlImGuiShutdown();
+    CloseWindow();
+
     return 0;
 }
