@@ -1,16 +1,27 @@
+BUILD_DIR := "build"
+SIMULATOR_SRC_DIR := "simulator"
+GPU_SRC_DIR := "src"
+TEST_DIR := "tests"
+EXEC_NAME := "simulator"
+
 project_dir := justfile_directory()
-build_dir := project_dir + "/build"
+build_dir := project_dir + "/" + BUILD_DIR
 
 num_cpus := `nproc`
 
+default: run
+
+build BUILD_TYPE="Debug":
+    git submodule update --init --recursive && \
+    mkdir -p {{BUILD_DIR}} && cd {{BUILD_DIR}} && \
+    cmake -DCMAKE_BUILD_TYPE={{BUILD_TYPE}} .. && \
+    cmake --build . --config {{BUILD_TYPE}} -j{{num_cpus}}
+
+test *ARGS: (build)
+    cd {{build_dir}} && ctest -j{{num_cpus}}
+
+run *ARGS: (build)
+    ./build/{{SIMULATOR_SRC_DIR}}/{{EXEC_NAME}} {{ARGS}}
+
 clean:
     rm -rf {{build_dir}}
-
-configure build_type="Debug":
-    mkdir -p {{build_dir}} && cd {{build_dir}} && cmake -DCMAKE_BUILD_TYPE={{build_type}} {{project_dir}}
-
-build build_type="Debug": (configure build_type)
-     cd {{build_dir}} && cmake --build . -j{{num_cpus}}
-
-test: (build)
-    cd {{build_dir}} && ctest -j{{num_cpus}}
