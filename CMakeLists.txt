@@ -72,8 +72,10 @@ endif()
 set(RESOURCES_DIR "${CMAKE_SOURCE_DIR}/resources")
 
 add_subdirectory(external)
+add_subdirectory(MonitorTester_FPGA)
 add_subdirectory(src)
 add_subdirectory(simulator)
+
 
 # option(ENABLE_TESTBENCHES "Enables testbenches" ON)
 # if(ENABLE_TESTBENCHES)
