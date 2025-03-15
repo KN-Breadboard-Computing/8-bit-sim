@@ -5,7 +5,7 @@ output reg [3:0] red,
 output reg [3:0] green,
 output reg [3:0] blue);
 
-always @(x||y)
+always @(x or y)
 begin
 if(x>=0 && x<91*1) // White
 	begin
