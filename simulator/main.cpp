@@ -4,38 +4,47 @@
 #include <raylib.h>
 #include <rlImGui.h>
 #include <iostream>
+#include <span>
 
-constexpr static uint32_t screen_width = 640u;
-constexpr static uint32_t screen_height = 480u;
-constexpr static uint32_t fps = 60u;
-constexpr static uint32_t scale = 2u;
+// VGA timing (based on VGA.v)
+constexpr static uint32_t h_visible_area = 640u;
+constexpr static uint32_t v_visible_area = 480u;
+constexpr static uint32_t h_total = 800u;
+constexpr static uint32_t v_total = 525u;
+constexpr static uint32_t h_front_porch = 144u;
+constexpr static uint32_t v_front_porch = 35u;
+constexpr static uint32_t h_sync_pulse_width = 96u;
+constexpr static uint32_t v_sync_pulse_width = 2u;
 
-constexpr static auto scaled_width = static_cast<uint32_t>(screen_width * scale);
-constexpr static auto scaled_height = static_cast<uint32_t>(screen_height * scale);
+// Raylib / Display constants
+constexpr static uint32_t scale = 1u;
+constexpr static auto scaled_width = static_cast<uint32_t>(h_visible_area * scale);
+constexpr static auto scaled_height = static_cast<uint32_t>(v_visible_area * scale);
 
-using VGAChannel = uint8_t;
+void set_pixel_scaled(const std::span<Color> colors, uint32_t x, uint32_t y, Color color) {
+    if (x >= h_visible_area || y >= v_visible_area) return;
 
-struct SignalVerifier {
-    // input
-    bool hsync;
-    bool vsync;
-    VGAChannel red;
-    VGAChannel Green;
-    VGAChannel Blue;
+    for (auto dy = 0u; dy < scale; dy++) {
+        for (auto dx = 0u; dx < scale; dx++) {
+            const auto index = (y * scale + dy) * scaled_width + (x * scale + dx);
+            if (index < colors.size()) {
+                colors[index] = color;
+            }
+        }
+    }
+}
 
-    private:
-    uint64_t clock = 0;
-};
+void clk_gpu(Vmonitor_tester& monitor_tester) {
+    monitor_tester.clock25MHz = 0;
+    monitor_tester.eval();
+    monitor_tester.clock25MHz = 1;
+    monitor_tester.eval();
+}
 
 auto main() -> int {
-    size_t gpu_frame = 0;
-
     auto pixels = std::array<Color, scaled_width * scaled_height>{};
 
     Vmonitor_tester monitor_tester{};
-
-    unsigned int v_counter = 0u;
-    unsigned int h_counter = 0u;
 
     InitWindow(scaled_width, scaled_height, "VGA tester");
 
@@ -49,37 +58,37 @@ auto main() -> int {
 
     rlImGuiSetup(true);
 
-    auto i = 0u;
-
     while (!WindowShouldClose()) {
-        monitor_tester.clock25MHz = 0;
-        monitor_tester.eval();
-        monitor_tester.clock25MHz = 1;
-        monitor_tester.eval();
+        if (IsKeyDown(KEY_SPACE)) {
+            for (uint32_t y = 0; y < v_total; y++) {
+                for (uint32_t x = 0; x < h_total; x++) {
+                    clk_gpu(monitor_tester);
 
-        std::cout << "R: " << (int)monitor_tester.red << " G: " << (int)monitor_tester.green << " B: " << (int)monitor_tester.blue
-                  << std::endl;
+                    if (x >= h_front_porch && x < h_front_porch + h_visible_area &&
+                            y >= v_front_porch && y < v_front_porch + v_visible_area) {
 
-        if ( i < screen_width * screen_height ) {
-            pixels[i] = Color{monitor_tester.red, monitor_tester.green, monitor_tester.blue, 255};
+                        const uint8_t r = monitor_tester.red * 16;
+                        const uint8_t g = monitor_tester.green * 16;
+                        const uint8_t b = monitor_tester.blue * 16;
 
-            i++;
+                        const auto display_x = x - h_front_porch;
+                        const auto display_y = y - v_front_porch;
 
-            gpu_frame++;
+                        set_pixel_scaled(pixels, display_x, display_y, Color{r, g, b, 255});
+                    }
+                }
+            }
+            UpdateTexture(texture, pixels.data());
         }
-
-        UpdateTexture(texture, pixels.data());
 
         BeginDrawing();
 
         DrawTexture(texture, 0, 0, RAYWHITE);
 
-        rlImGuiBegin();
-        ImGui::Begin("Hello, world!");
-        //ImGui::Text("This is some useful text.");
-        ImGui::Text("Frame: %lu", gpu_frame);
-        ImGui::End();
-        rlImGuiEnd();
+        /*rlImGuiBegin();*/
+        /*ImGui::Begin("Hello, world!");*/
+        /*ImGui::End();*/
+        /*rlImGuiEnd();*/
 
         // DrawFPS(10, 10);
 
