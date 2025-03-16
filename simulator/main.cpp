@@ -60,10 +60,9 @@ auto main() -> int {
 
     while (!WindowShouldClose()) {
         if (IsKeyDown(KEY_SPACE)) {
-            for (uint32_t y = 0; y < v_total; y++) {
+            // do not ask why the +1
+            for (uint32_t y = 0; y < v_total + 1; y++) {
                 for (uint32_t x = 0; x < h_total; x++) {
-                    clk_gpu(monitor_tester);
-
                     if (x >= h_front_porch && x < h_front_porch + h_visible_area &&
                             y >= v_front_porch && y < v_front_porch + v_visible_area) {
 
@@ -76,6 +75,7 @@ auto main() -> int {
 
                         set_pixel_scaled(pixels, display_x, display_y, Color{r, g, b, 255});
                     }
+                    clk_gpu(monitor_tester);
                 }
             }
             UpdateTexture(texture, pixels.data());
