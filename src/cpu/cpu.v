@@ -17,9 +17,9 @@ module cpu (
 
     `include "include/signals.v"
 
-    initial begin
+    /*initial begin
         $monitor("[cpu/inter] clk = %1b, data = %02h, bus = %02h", clk, data_bus, bus);
-    end
+    end*/
 
     /* verilator lint_off UNOPTFLAT */
     wire [7:0] bus;

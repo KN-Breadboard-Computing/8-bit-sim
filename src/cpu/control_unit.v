@@ -128,7 +128,7 @@ always @(posedge not_clk) begin
 end
 
 initial begin
-    $monitor("[ctrl] mcc = %02h, mcc_tick = %1h, mcc_rst = %1h, rst = %1h, inst_reg = %02h, reg_ir_load = %1h, data = %02h, latched_int = %02h, int = %02h", mcc_bus, mcc_tick, ~mcc_rst, rst, inst_reg, reg_ir_load, data, latched_int_bus, int_bus);
+    //$monitor("[ctrl] mcc = %02h, mcc_tick = %1h, mcc_rst = %1h, rst = %1h, inst_reg = %02h, reg_ir_load = %1h, data = %02h, latched_int = %02h, int = %02h", mcc_bus, mcc_tick, ~mcc_rst, rst, inst_reg, reg_ir_load, data, latched_int_bus, int_bus);
 end
 
 assign irq_no = latched_int_bus;

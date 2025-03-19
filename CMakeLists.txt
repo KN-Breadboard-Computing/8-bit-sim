@@ -61,11 +61,6 @@ add_subdirectory(external)
 add_subdirectory(src)
 add_subdirectory(simulator)
 
-option(ENABLE_TESTBENCHES "Enables testbenches" ON)
-if(ENABLE_TESTBENCHES)
-  add_subdirectory(testbenches)
-endif()
-
 option(ENABLE_TESTS "Enables tests" ON)
 if(ENABLE_TESTS)
   include(CTest)
