@@ -1,12 +1,12 @@
 module Monitor_Tester(
-   clock25MHz,
+   clk,
    red,
    blue,
    green,
    hsync,
    vsync
 );
-input  clock25MHz;
+input  clk;
 output reg [3:0]  red;
 output reg [3:0]  blue;
 output reg [3:0] green;
@@ -23,7 +23,7 @@ wire [3:0] blue1;
 
 // Instantiate VGA controller
 VGA vga_inst(
-    .clock25MHz(clock25MHz),
+    .clk(clk),
     .vsync(vsync),
     .hsync(hsync),
     .canDisplayImage(canDisplayImage),

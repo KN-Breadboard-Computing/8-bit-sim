@@ -1,5 +1,5 @@
 module hSync(
-input clock25MHz,
+input clk,
 output reg hsync,
 output reg isHorizontalActive,
 output reg [9:0] x
@@ -18,7 +18,7 @@ parameter
 localparam maxCount = syncPulse+backPorch+active+frontPorch;
 
 reg [9:0] counter = 0; // 9 bits (max value is 480)
-always @(posedge clock25MHz) begin
+always @(posedge clk) begin
     if (counter >= maxCount - 1)
         counter <= 0;
     else

@@ -1,9 +1,9 @@
 #include <Vmonitor_tester.h>
+#include <Vgpu.h>
 #include <cstdint>
 #include <imgui.h>
 #include <raylib.h>
 #include <rlImGui.h>
-#include <iostream>
 #include <span>
 
 // VGA timing (based on VGA.v)
@@ -35,9 +35,9 @@ void set_pixel_scaled(const std::span<Color> colors, uint32_t x, uint32_t y, Col
 }
 
 void clk_gpu(Vmonitor_tester& monitor_tester) {
-    monitor_tester.clock25MHz = 0;
+    monitor_tester.clk = 0;
     monitor_tester.eval();
-    monitor_tester.clock25MHz = 1;
+    monitor_tester.clk = 1;
     monitor_tester.eval();
 }
 
@@ -45,6 +45,7 @@ auto main() -> int {
     auto pixels = std::array<Color, scaled_width * scaled_height>{};
 
     Vmonitor_tester monitor_tester{};
+    Vgpu gpu{};
 
     InitWindow(scaled_width, scaled_height, "VGA tester");
 
@@ -64,12 +65,16 @@ auto main() -> int {
             for (uint32_t y = 0; y < v_total + 1; y++) {
                 for (uint32_t x = 0; x < h_total; x++) {
                     clk_gpu(monitor_tester);
+                    gpu.clk = 0;
+                    gpu.eval();
+                    gpu.clk = 1;
+                    gpu.eval();
                     if (x >= h_front_porch && x < h_front_porch + h_visible_area &&
                             y >= v_front_porch && y < v_front_porch + v_visible_area) {
 
-                        const uint8_t r = monitor_tester.red * 16;
-                        const uint8_t g = monitor_tester.green * 16;
-                        const uint8_t b = monitor_tester.blue * 16;
+                        const uint8_t r = gpu.red_out * 16;
+                        const uint8_t g = gpu.green_out * 16;
+                        const uint8_t b = gpu.blue_out * 16;
 
                         const auto display_x = x - h_front_porch;
                         const auto display_y = y - v_front_porch;

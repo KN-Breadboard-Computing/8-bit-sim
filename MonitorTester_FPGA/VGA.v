@@ -1,5 +1,5 @@
 module VGA(
-input clock25MHz,
+input clk,
 output vsync,
 output hsync,
 output canDisplayImage,
@@ -8,7 +8,7 @@ output reg[9:0] y
 );
 reg [9:0] xCounter;
 reg [9:0] yCounter;
- always @(posedge clock25MHz)  // horizontal counter
+ always @(posedge clk)  // horizontal counter
 	begin 
 		if (xCounter < 799)
 			xCounter <= xCounter + 1;
@@ -16,7 +16,7 @@ reg [9:0] yCounter;
 			xCounter <= 0;              
 	end  
 	
-	always @ (posedge clock25MHz)  // vertical counter
+	always @ (posedge clk)  // vertical counter
 		begin 
 			if (xCounter == 799)  // only counts up 1 count after horizontal finishes 800 counts
 				begin
@@ -27,7 +27,7 @@ reg [9:0] yCounter;
 				end  
 		end
 			
-	always @ (posedge clock25MHz)
+	always @ (posedge clk)
 	begin	
 		if(xCounter>=144 && xCounter<784) x=xCounter-144;
 		else x = 0;

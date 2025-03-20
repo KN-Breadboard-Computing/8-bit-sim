@@ -1,5 +1,5 @@
 module bouncingSquare(
-input clock25MHz,
+input clk,
 input [9:0] x,
 input [9:0] y,
 output [3:0] red,
@@ -28,7 +28,7 @@ output [3:0] blue
 	wire rightCollision = (squareX+SQUARE_SIZE == 639);
 	
 
-always @(posedge clock25MHz)
+always @(posedge clk)
 begin
 	if(topCollision) vSpeed<=1;
 	if(bottomCollision) vSpeed<=0;

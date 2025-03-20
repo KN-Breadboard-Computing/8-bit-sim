@@ -1,5 +1,5 @@
 module vSync(
-input clock25MHz,
+input clk,
 output reg vsync,
 output reg isVerticalActive,
 output reg [9:0] y
@@ -17,7 +17,7 @@ parameter
 localparam maxCount = vFrontPorch+vBackPorch+vSyncPulse+vSyncActive;
 
 reg [9:0] counter = 0; // 9 bits (max value is 512)
-always @(posedge clock25MHz) begin
+always @(posedge clk) begin
     if (counter >= maxCount - 1)
         counter <= 0;
     else
