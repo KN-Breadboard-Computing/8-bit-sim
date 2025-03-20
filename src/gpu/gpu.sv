@@ -21,9 +21,9 @@ module gpu(
     input wire [1:0] interrupt_code_in,
     input wire [7:0] interrupt_data_in,
     input wire interrupt_enable,
-    output reg [7:0] red_out,
-    output reg [7:0] green_out,
-    output reg [7:0] blue_out
+    output reg [7:0] red,
+    output reg [7:0] green,
+    output reg [7:0] blue
 );
 
 // NOTE: The order of array sizes might need to be reversed

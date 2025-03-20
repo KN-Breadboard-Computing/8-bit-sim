@@ -9,9 +9,9 @@ always @(x or y)
 begin
 if(x>=0 && x<91*1) // White
 	begin
-		red <= 4'hF;
-		green <= 4'hF;
-		blue <= 4'hF;
+		red <= 4'hA;
+		green <= 4'hA;
+		blue <= 4'hA;
 	end
 	else if(x>=91*1 && x<91*2) // Yellow
 	begin
