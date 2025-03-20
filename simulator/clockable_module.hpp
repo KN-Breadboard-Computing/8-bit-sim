@@ -50,6 +50,10 @@ template <ClockableModule T> struct Clock : ClockBase {
     auto get_time_till_next_tick() const -> uint32_t override { return current_period() - time_since_last_tick; }
     auto current_period() const -> uint32_t { return is_posedge ? pos_period : neg_period; }
 
+    auto get_module_ptr() const -> const T* const {
+        return module;
+    }
+
     const uint32_t pos_period;
     const uint32_t neg_period;
 
