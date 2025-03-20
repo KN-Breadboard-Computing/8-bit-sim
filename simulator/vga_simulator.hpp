@@ -66,17 +66,7 @@ struct VGASimulator {
         while (current_col < h_total) {
             scheduler->advance();
 
-            // TODO: Check hsync and vsync polarity (whether it should be high or low during sync pulse)
-            if (!hsync_info.sync_detected && vga_driver->hsync) {
-                hsync_info.is_in_sync_pulse = true;
-                hsync_info.sync_detected = true;
-                hsync_info.sync_start = current_col;
-            } else if (!hsync_info.is_in_sync_pulse && hsync_info.sync_detected && vga_driver->hsync) {
-                hsync_info.multiple_pulses_detected = true;
-            } else if (hsync_info.is_in_sync_pulse && !vga_driver->hsync) {
-                hsync_info.is_in_sync_pulse = false;
-                hsync_info.sync_end = current_col;
-            }
+            detect_sync_pulse_change(hsync_info, vga_driver->hsync, current_col);
 
             if (is_in_vertical_visible_area && current_col < h_visible_area) {
                 Color color = {
@@ -127,18 +117,7 @@ struct VGASimulator {
                 fmt::println("Incorrect row timing on row {}", current_row);
             }
 
-            // TODO: Check vsync and vsync polarity (whether it should be high or low during sync pulse)
-            if (!vsync_info.sync_detected && vga_driver->vsync) {
-                vsync_info.is_in_sync_pulse = true;
-                vsync_info.sync_detected = true;
-                vsync_info.sync_start = current_row;
-            } else if (!vsync_info.is_in_sync_pulse && vsync_info.sync_detected && vga_driver->vsync) {
-                vsync_info.multiple_pulses_detected = true;
-            } else if (vsync_info.is_in_sync_pulse && !vga_driver->vsync) {
-                vsync_info.is_in_sync_pulse = false;
-                vsync_info.sync_end = current_row;
-            }
-
+            detect_sync_pulse_change(vsync_info, vga_driver->vsync, current_row);
             current_row++;
         }
 
@@ -174,15 +153,7 @@ struct VGASimulator {
         while(i < max_pulses) {
             scheduler->advance();
 
-            if (!hsync_info.sync_detected && vga_driver->hsync) {
-                hsync_info.is_in_sync_pulse = true;
-                hsync_info.sync_detected = true;
-                hsync_info.sync_start = i;
-            } else if (!hsync_info.is_in_sync_pulse && hsync_info.sync_detected && vga_driver->hsync) {
-                hsync_info.multiple_pulses_detected = true;
-            } else if (hsync_info.is_in_sync_pulse && !vga_driver->hsync) {
-                hsync_info.is_in_sync_pulse = false;
-                hsync_info.sync_end = i;
+            if(detect_sync_pulse_change(hsync_info, vga_driver->hsync, i) && !hsync_info.is_in_sync_pulse) {
                 break;
             }
             i++;
@@ -217,16 +188,7 @@ struct VGASimulator {
                 i += h_total;
             }
 
-            // TODO: Check vsync and vsync polarity (whether it should be high or low during sync pulse)
-            if (!vsync_info.sync_detected && vga_driver->vsync) {
-                vsync_info.is_in_sync_pulse = true;
-                vsync_info.sync_detected = true;
-                vsync_info.sync_start = current_row;
-            } else if (!vsync_info.is_in_sync_pulse && vsync_info.sync_detected && vga_driver->vsync) {
-                vsync_info.multiple_pulses_detected = true;
-            } else if (vsync_info.is_in_sync_pulse && !vga_driver->vsync) {
-                vsync_info.is_in_sync_pulse = false;
-                vsync_info.sync_end = current_row;
+            if(detect_sync_pulse_change(vsync_info, vga_driver->vsync, current_row) && !vsync_info.is_in_sync_pulse) {
                 break;
             }
             i++;
@@ -265,6 +227,26 @@ private:
             return sync_end - sync_start;
         }
     };
+
+    // TODO: Check vsync and hsync polarity (whether it should be high or low during sync pulse)
+    bool detect_sync_pulse_change(SignalSyncInfo& info, bool sync_signal, uint32_t position) {
+        bool state_changed = false;
+
+        if (!info.sync_detected && sync_signal) {
+            info.is_in_sync_pulse = true;
+            info.sync_detected = true;
+            info.sync_start = position;
+            state_changed = true;
+        } else if (!info.is_in_sync_pulse && info.sync_detected && sync_signal) {
+            info.multiple_pulses_detected = true;
+        } else if (info.is_in_sync_pulse && !sync_signal) {
+            info.is_in_sync_pulse = false;
+            info.sync_end = position;
+            state_changed = true;
+        }
+
+        return state_changed;
+    }
 
     using HSyncInfo = SignalSyncInfo;
     using VSyncInfo = SignalSyncInfo;
