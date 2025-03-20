@@ -1,6 +1,16 @@
 # Include FetchContent and required dependencies
 include(FetchContent)
 
+# FMT
+find_package(fmt QUIET)
+if (NOT fmt_FOUND)
+    FetchContent_Declare(
+      fmt
+      GIT_REPOSITORY https://github.com/fmtlib/fmt
+      GIT_TAG        e69e5f977d458f2650bb346dadf2ad30c5320281) # 10.2.1
+    FetchContent_MakeAvailable(fmt)
+endif()
+
 # RAYLIB
 set(RAYLIB_VERSION 5.0)
 find_package(raylib ${RAYLIB_VERSION} QUIET)
