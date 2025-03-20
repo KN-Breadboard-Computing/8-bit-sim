@@ -6,7 +6,7 @@ if(SANITIZER_AVAILABLE_AND_SET)
   target_link_libraries(${EXEC_NAME} ${SANITIZER_FLAGS})
 endif()
 
-target_link_libraries(${EXEC_NAME} GPU MONITOR_TESTER raylib Imgui fmt)
+target_link_libraries(${EXEC_NAME} GPU MONITOR_TESTER raylib Imgui fmt Expected)
 
 if(MSVC)
   set_target_properties(${EXEC_NAME} PROPERTIES

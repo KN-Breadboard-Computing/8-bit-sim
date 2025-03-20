@@ -5,6 +5,22 @@
 #include <imgui.h>
 #include <raylib.h>
 #include <rlImGui.h>
+#include <fmt/color.h>
+#include <fmt/base.h>
+
+void print_vga_error(const VGASimulatorError& error) {
+    std::visit([&](const auto& err) {
+        fmt::print(fmt::fg(fmt::color::red) | fmt::emphasis::bold, "error: ");
+        fmt::println("{}", err.message());
+    }, error);
+}
+
+template <typename T>
+void print_error_if_failed(const rd::expected<T, VGASimulatorError>& result) {
+    if (!result) {
+        print_vga_error(result.error());
+    }
+}
 
 auto main() -> int {
     auto pixels = std::array<Color, scaled_width * scaled_height>{};
@@ -35,10 +51,9 @@ auto main() -> int {
     while (!WindowShouldClose()) {
         if (IsKeyDown(KEY_SPACE)) {
 
-            bool is_timing_correct = simulator.process_vga_frame(pixels);
-            if(!is_timing_correct) {
-                fmt::println("Error: incorrect timing");
-            }
+            auto is_timing_correct = simulator.process_vga_frame(pixels);
+            print_error_if_failed(is_timing_correct);
+
             UpdateTexture(texture, pixels.data());
         }
 
