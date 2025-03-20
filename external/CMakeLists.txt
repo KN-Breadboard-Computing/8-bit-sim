@@ -1,6 +1,10 @@
 # Include FetchContent and required dependencies
 include(FetchContent)
 
+# EXPECTED
+add_library (Expected INTERFACE)
+target_include_directories(Expected INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/expected)
+
 # FMT
 find_package(fmt QUIET)
 if (NOT fmt_FOUND)
