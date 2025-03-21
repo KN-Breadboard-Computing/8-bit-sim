@@ -65,7 +65,7 @@ endif()
 
 add_subdirectory(external)
 add_subdirectory(MonitorTester_FPGA)
-add_subdirectory(src)
+add_subdirectory(gpu)
 add_subdirectory(simulator)
 
 option(ENABLE_TESTS "Enables tests" ON)
