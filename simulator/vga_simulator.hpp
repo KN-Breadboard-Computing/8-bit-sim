@@ -69,7 +69,7 @@ struct VGASimulator {
     T* vga_driver;
     ClockScheduler* scheduler;
 
-    using DrawFunction = std::function<void(const uint32_t, const uint32_t, const Color)>;
+    using DrawFunction = std::function<void(const uint32_t x, const uint32_t y, const Color color)>;
 
     VGASimulator(T* vga_driver, ClockScheduler* scheduler)
         : vga_driver(vga_driver), scheduler(scheduler), current_row(0) {}
@@ -125,6 +125,7 @@ struct VGASimulator {
         static constexpr auto max_pulses = h_total * v_total * 5;
         auto i = 0u;
 
+        // first we find the hsync pulse + back porch (so we sync up with horizontal display time)
         HSyncInfo hsync_info{};
 
         while(i < max_pulses) {
@@ -156,9 +157,9 @@ struct VGASimulator {
             scheduler->advance();
         }
 
+        // then the same for vsync
         VSyncInfo vsync_info{};
 
-        // then vsync
         i = 0u;
         while (i < max_pulses) {
             if (const auto correct_row = process_vga_row([](const uint32_t, const uint32_t, const Color){}, false) ; !correct_row) {
@@ -236,6 +237,7 @@ private:
             });
         }
 
+        // TODO: Find out why we need the -1 here (????)
         if (hsync_info.sync_start != h_visible_area + h_front_porch - 1) {
             return rd::unexpected(IncorrectSyncTiming{
                 .is_hsync = true,
