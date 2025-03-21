@@ -7,6 +7,25 @@
 #include <rlImGui.h>
 #include <fmt/color.h>
 #include <fmt/base.h>
+#include <span>
+
+// Raylib / Display constants
+constexpr static uint32_t scale = 1u;
+constexpr static auto scaled_width = static_cast<uint32_t>(h_visible_area * scale);
+constexpr static auto scaled_height = static_cast<uint32_t>(v_visible_area * scale);
+
+void set_pixel_scaled(const std::span<Color> pixels, uint32_t x, uint32_t y, Color color) {
+    if (x >= h_visible_area || y >= v_visible_area) return;
+
+    for (auto dy = 0u; dy < scale; dy++) {
+        for (auto dx = 0u; dx < scale; dx++) {
+            const auto index = (y * scale + dy) * scaled_width + (x * scale + dx);
+            if (index < pixels.size()) {
+                pixels[index] = color;
+            }
+        }
+    }
+}
 
 void print_vga_error(const VGASimulatorError& error) {
     std::visit([&](const auto& err) {
@@ -51,7 +70,9 @@ auto main() -> int {
     while (!WindowShouldClose()) {
         if (IsKeyDown(KEY_SPACE)) {
 
-            auto is_timing_correct = simulator.process_vga_frame(pixels);
+            auto is_timing_correct = simulator.process_vga_frame([&pixels](const uint32_t x, const uint32_t y, const Color color) {
+                    set_pixel_scaled(pixels,x,y,color);
+            });
             print_error_if_failed(is_timing_correct);
 
             UpdateTexture(texture, pixels.data());

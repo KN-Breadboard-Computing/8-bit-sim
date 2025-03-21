@@ -5,9 +5,9 @@
 #include <cstdint>
 #include <imgui.h>
 #include <raylib.h>
-#include <span>
 #include <fmt/format.h>
 #include <expected.hpp>
+#include <functional>
 
 // VGA timing (based on http://www.tinyvga.com/vga-timing/640x480@60Hz)
 
@@ -21,11 +21,6 @@ constexpr static uint32_t h_back_porch = 48u;
 constexpr static uint32_t v_back_porch = 33u;
 constexpr static uint32_t h_total = h_front_porch + h_visible_area + h_sync_pulse_width + h_back_porch;
 constexpr static uint32_t v_total = v_front_porch + v_visible_area + v_sync_pulse_width + v_back_porch;
-
-// Raylib / Display constants
-constexpr static uint32_t scale = 1u;
-constexpr static auto scaled_width = static_cast<uint32_t>(h_visible_area * scale);
-constexpr static auto scaled_height = static_cast<uint32_t>(v_visible_area * scale);
 
 // Simulator error types
 struct HSyncUndetected { auto message() const { return "Hsync undetected"; } };
@@ -69,30 +64,19 @@ concept VerilatedVGADriver = ClockableModule<T> && requires(T module) {
     module.vsync;
 };
 
-inline void set_pixel_scaled(const std::span<Color> colors, uint32_t x, uint32_t y, Color color) {
-    if (x >= h_visible_area || y >= v_visible_area) return;
-
-    for (auto dy = 0u; dy < scale; dy++) {
-        for (auto dx = 0u; dx < scale; dx++) {
-            const auto index = (y * scale + dy) * scaled_width + (x * scale + dx);
-            if (index < colors.size()) {
-                colors[index] = color;
-            }
-        }
-    }
-}
-
 template <VerilatedVGADriver T>
 struct VGASimulator {
     T* vga_driver;
     ClockScheduler* scheduler;
+
+    using DrawFunction = std::function<void(const uint32_t, const uint32_t, const Color)>;
 
     VGASimulator(T* vga_driver, ClockScheduler* scheduler)
         : vga_driver(vga_driver), scheduler(scheduler), current_row(0) {}
 
     // it assumes that the monitor and the simulator are synced up - the module is assumed to be in display time
     // run `sync()` before this
-    auto process_vga_frame(std::span<Color> pixels) -> rd::expected<void, VGASimulatorError> {
+    auto process_vga_frame(DrawFunction draw_function) -> rd::expected<void, VGASimulatorError> {
         current_row = 0;
 
         VSyncInfo vsync_info{};
@@ -101,7 +85,7 @@ struct VGASimulator {
 
         while (current_row <= v_total) {
             is_in_visible_area = current_row < v_visible_area;
-            if (const auto correct_row = process_vga_row(pixels, is_in_visible_area) ; !correct_row) {
+            if (const auto correct_row = process_vga_row(draw_function, is_in_visible_area) ; !correct_row) {
                 return rd::unexpected{correct_row.error()};
             }
 
@@ -174,12 +158,10 @@ struct VGASimulator {
 
         VSyncInfo vsync_info{};
 
-        auto pixels = std::array<Color, scaled_width * scaled_height>{};
-
         // then vsync
         i = 0u;
         while (i < max_pulses) {
-            if (const auto correct_row = process_vga_row(pixels, false) ; !correct_row) {
+            if (const auto correct_row = process_vga_row([](const uint32_t, const uint32_t, const Color){}, false) ; !correct_row) {
                 i += h_total;
                 return rd::unexpected{correct_row.error()};
             }
@@ -199,7 +181,7 @@ struct VGASimulator {
         }
 
         for (auto j = 0u; j < v_back_porch; j++) {
-            if (!process_vga_row(pixels, false)) {
+            if (!process_vga_row([](const uint32_t, const uint32_t, const Color){}, false)) {
                 fmt::println("Incorrect row timing on row {}", current_row);
                 i += h_total;
             }
@@ -213,7 +195,7 @@ private:
     bool is_in_sync = false;
 
     // it assumes that the monitor and the simulator are synced up - the module is assumed to be in display time
-    auto process_vga_row(std::span<Color> pixels, bool is_in_vertical_visible_area) -> rd::expected<void, VGASimulatorError> {
+    auto process_vga_row(DrawFunction draw_function, bool is_in_vertical_visible_area) -> rd::expected<void, VGASimulatorError> {
         uint32_t current_col = 0;
 
         HSyncInfo hsync_info{};
@@ -232,7 +214,7 @@ private:
                     255
                 };
 
-                set_pixel_scaled(pixels, current_col, current_row, color);
+                draw_function(current_col, current_row, color);
             }
 
             current_col++;
