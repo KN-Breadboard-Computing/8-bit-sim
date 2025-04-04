@@ -121,7 +121,7 @@ TEST_CASE("Mov works") {
         0x19, 0xBE, 0xEF, // mov [0xBEEF], a | 8
         0x11, 0x33,       // mov a, 0x33     | 4
         0x19, 0xCA, 0xFE, // mov [0xCAFE], a | 8
-        0xD9              // halt            | 2
+        0xF9              // halt            | 2
     };
 
     // Copy program to memory
@@ -207,21 +207,21 @@ TEST_CASE("Handling INT0 works") {
     cpu.rst = 1;
 
     uint8_t prog[] = { 
-        0xD4,             // nop             | 3
-        0xD4,             // nop             | 3
-        0xD4,             // nop             | 3
-        0xD4,             // nop             | 3
-        0xD4,             // nop             | 3
-        0xD4,             // nop             | 3
-        0xD4,             // nop             | 3
-        0xD4,             // nop             | 3
-        0xD9              // hlt             | 2
+        0xEE,             // nop             | 3
+        0xEE,             // nop             | 3
+        0xEE,             // nop             | 3
+        0xEE,             // nop             | 3
+        0xEE,             // nop             | 3
+        0xEE,             // nop             | 3
+        0xEE,             // nop             | 3
+        0xEE,             // nop             | 3
+        0xF9              // hlt             | 2
     };
 
     uint8_t isr0[] = {
         0x11, 0x73,       // mov a, 0x73     | 4
         0x19, 0xDE, 0xAD, // mov [0xCAFE], a | 8
-        0xD9              // hlt
+        0xF9              // hlt
     };
 
     // Copy program to memory
