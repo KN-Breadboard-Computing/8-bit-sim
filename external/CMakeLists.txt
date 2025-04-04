@@ -8,10 +8,14 @@ target_include_directories(Expected INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/expect
 # FMT
 find_package(fmt QUIET)
 if (NOT fmt_FOUND)
+    set(FMT_TEST FF CACHE INTERNAL "disabling fmt tests")
     FetchContent_Declare(
-      fmt
-      GIT_REPOSITORY https://github.com/fmtlib/fmt
-      GIT_TAG        e69e5f977d458f2650bb346dadf2ad30c5320281) # 10.2.1
+            fmt
+            GIT_REPOSITORY  https://github.com/fmtlib/fmt.git
+            GIT_TAG         11.1.4
+            GIT_PROGRESS    TRUE
+            USES_TERMINAL_DOWNLOAD TRUE
+    )
     FetchContent_MakeAvailable(fmt)
 endif()
 
@@ -66,14 +70,3 @@ endif()
 
 set_target_properties(Imgui PROPERTIES 
     INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:Imgui,INTERFACE_INCLUDE_DIRECTORIES>)
-
-# fmt
-find_package(fmt QUIET)
-if (NOT fmt_FOUND)
-    FetchContent_Declare(fmt
-        GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-        GIT_TAG master
-        UPDATE_DISCONNECTED TRUE # Better for Windows environments
-    )
-    FetchContent_MakeAvailable(fmt)
-endif()
