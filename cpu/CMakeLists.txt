@@ -57,5 +57,5 @@ add_module(RAM SOURCES adapters/ram_adapter.sv basics/ram.sv PREFIX Vram TOP_MOD
 add_module(MEM_UNIT SOURCES adapters/mem_unit_adapter.sv cpu/mem_unit.sv PREFIX Vmem_unit TOP_MODULE mem_unit_adapter)
 add_module(MODCOUNTER SOURCES gpu/modcounter.sv PREFIX Vmodcounter TOP_MODULE modcounter)
 add_module(MODCOUNTER_TEST_WRAPPER SOURCES gpu/modcounter.sv gpu/modcounter_test_wrapper.sv PREFIX Vmodcounter_test_wrapper TOP_MODULE modcounter_test_wrapper)
-add_module(GPU SOURCES basics/shift_reg.sv gpu/gpu.sv RESOURCE_DIRS font -DFONT_PATH PREFIX Vgpu TOP_MODULE gpu)
+# add_module(GPU SOURCES basics/shift_reg.sv gpu/gpu.sv RESOURCE_DIRS font -DFONT_PATH PREFIX Vgpu TOP_MODULE gpu)
 add_module(TMP SOURCES cpu/tmp.sv adapters/tmp_adapter.sv PREFIX Vtmp TOP_MODULE tmp_adapter)
