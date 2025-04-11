@@ -14,7 +14,7 @@ default: run
 build BUILD_TYPE="Debug":
     git submodule update --init --recursive && \
     mkdir -p {{BUILD_DIR}} && cd {{BUILD_DIR}} && \
-    cmake -DCMAKE_BUILD_TYPE={{BUILD_TYPE}} .. && \
+    cmake -DCMAKE_BUILD_TYPE={{BUILD_TYPE}} -DCMAKE_POLICY_VERSION_MINIMUM=3.5 .. && \
     cmake --build . --config {{BUILD_TYPE}} -j{{num_cpus}}
 
 test *ARGS: (build)

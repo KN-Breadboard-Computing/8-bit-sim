@@ -23,7 +23,9 @@ module gpu(
     input wire interrupt_enable,
     output reg [7:0] red,
     output reg [7:0] green,
-    output reg [7:0] blue
+    output reg [7:0] blue,
+    output logic hsync,
+    output logic vsync
 );
 
 // NOTE: The order of array sizes might need to be reversed

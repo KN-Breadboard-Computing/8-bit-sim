@@ -1,6 +1,14 @@
 set(EXEC_NAME "simulator")
 add_executable(${EXEC_NAME} main.cpp)
 
+if(SIMULATOR_COMPILE_OPTIONS)
+  target_compile_options(${EXEC_NAME} PRIVATE ${SIMULATOR_COMPILE_OPTIONS})
+endif()
+
+if(SIMULATOR_COMPILE_DEFINITIONS)
+  target_compile_definitions(${EXEC_NAME} PRIVATE ${SIMULATOR_COMPILE_DEFINITIONS})
+endif()
+
 if(SANITIZER_AVAILABLE_AND_SET)
   target_compile_options(${EXEC_NAME} PRIVATE ${SANITIZER_FLAGS})
   target_link_libraries(${EXEC_NAME} ${SANITIZER_FLAGS})
