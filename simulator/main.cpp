@@ -10,7 +10,7 @@
 #include <span>
 
 // Raylib / Display constants
-constexpr static uint32_t scale = 1u;
+constexpr static uint32_t scale = 2u;
 constexpr static auto scaled_width = static_cast<uint32_t>(h_visible_area * scale);
 constexpr static auto scaled_height = static_cast<uint32_t>(v_visible_area * scale);
 

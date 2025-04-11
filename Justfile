@@ -9,7 +9,7 @@ build_dir := project_dir + "/" + BUILD_DIR
 
 num_cpus := `nproc`
 
-default: run
+default: (run "Debug")
 
 build BUILD_TYPE="Debug":
     git submodule update --init --recursive && \
@@ -20,7 +20,7 @@ build BUILD_TYPE="Debug":
 test *ARGS: (build)
     cd {{build_dir}} && ctest -j{{num_cpus}}
 
-run *ARGS: (build)
+run BUILD_TYPE *ARGS: (build BUILD_TYPE)
     ./build/{{SIMULATOR_SRC_DIR}}/{{EXEC_NAME}} {{ARGS}}
 
 clean:
