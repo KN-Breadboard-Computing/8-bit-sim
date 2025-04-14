@@ -42,9 +42,9 @@ template <ClockableModule T> struct Clock : ClockBase {
         if (time_since_last_tick == current_period()) {
             tick();
             return;
+        } else if (time_since_last_tick > current_period()) {
+            fmt::println("Clock overshot by {} cycles", time_since_last_tick - current_period());
         }
-
-        fmt::println("Clock overshot by {} cycles", time_since_last_tick - current_period());
     }
 
     auto get_time_till_next_tick() const -> uint32_t override { return current_period() - time_since_last_tick; }
