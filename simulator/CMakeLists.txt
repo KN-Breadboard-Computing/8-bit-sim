@@ -1,3 +1,6 @@
+add_library(PS2 STATIC ps2/ps2.cpp)
+target_include_directories(PS2 PUBLIC ps2)
+
 set(EXEC_NAME "simulator")
 add_executable(${EXEC_NAME} main.cpp)
 
@@ -14,7 +17,7 @@ if(SANITIZER_AVAILABLE_AND_SET)
   target_link_libraries(${EXEC_NAME} ${SANITIZER_FLAGS})
 endif()
 
-target_link_libraries(${EXEC_NAME} GPU MONITOR_TESTER raylib Imgui fmt Expected)
+target_link_libraries(${EXEC_NAME} GPU CPU PS2 MONITOR_TESTER raylib Imgui fmt Expected)
 
 if(MSVC)
   set_target_properties(${EXEC_NAME} PROPERTIES
