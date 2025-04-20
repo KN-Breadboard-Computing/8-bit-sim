@@ -46,5 +46,5 @@ function (add_module MODULE_NAME)
     verilate(${MODULE_NAME} SOURCES ${MODULE_VERILOG_SOURCES} INCLUDE_DIRS "." PREFIX ${ADD_MODULE_PREFIX} TOP_MODULE ${ADD_MODULE_TOP_MODULE} VERILATOR_ARGS -Wall -Wno-fatal -cc ${DEFINES})
 endfunction()
 
-add_module(VGA_CONTOLLER SOURCES gpu/vga_controller.sv PREFIX Vvga_controller TOP_MODULE VGA)
-add_module(GPU SOURCES gpu/gpu.sv RESOURCE_DIRS font -DFONT_PATH PREFIX Vgpu TOP_MODULE gpu)
+#add_module(VGA_CONTOLLER SOURCES gpu/vga_controller.sv PREFIX Vvga_controller TOP_MODULE VGA)
+add_module(GPU SOURCES gpu/gpu.sv gpu/ram.v RESOURCE_DIRS font -DFONT_PATH PREFIX Vgpu TOP_MODULE gpu)

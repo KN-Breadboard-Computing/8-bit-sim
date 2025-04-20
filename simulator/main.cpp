@@ -53,13 +53,14 @@ auto main() -> int {
     Vcpu cpu{};
 
     auto cpu_clock = Clock{&cpu, 1, 0, true};
-    auto gpu_clock = Clock{&monitor_tester, 1, 0, true};
+    auto gpu_clock = Clock{&gpu, 1, 0, true};
 
     auto clock_scheduler = ClockScheduler{};
     clock_scheduler.add_clock(&gpu_clock);
     clock_scheduler.add_clock(&cpu_clock);
 
-    VGASimulator simulator(&monitor_tester, &clock_scheduler);
+    gpu.rst = 0;
+    VGASimulator simulator(&gpu, &clock_scheduler);
 
     simulator.sync();
 
@@ -75,6 +76,7 @@ auto main() -> int {
 
     rlImGuiSetup(true);
 
+    bool wait_for_key = false;
     while (!WindowShouldClose()) {
         if (IsKeyDown(KEY_SPACE)) {
 
@@ -84,6 +86,61 @@ auto main() -> int {
             print_error_if_failed(is_timing_correct);
 
             UpdateTexture(texture, pixels.data());
+        }
+
+        if (IsKeyPressed(KEY_I)) {
+            GetCharPressed(); // extract 'i' from the queue
+            wait_for_key = true;
+            // TODO: color support
+        }
+
+        if (IsKeyPressed(KEY_RIGHT)) {
+            gpu.interrupt_enable = 1;
+            gpu.interrupt_code_in = 0b01;
+            gpu.interrupt_data_in = 0x81;
+            gpu.eval();
+            gpu.interrupt_enable = 0;
+            gpu.eval();
+        }
+
+        if (IsKeyPressed(KEY_LEFT)) {
+            gpu.interrupt_enable = 1;
+            gpu.interrupt_code_in = 0b01;
+            gpu.interrupt_data_in = 0xFF;
+            gpu.eval();
+            gpu.interrupt_enable = 0;
+            gpu.eval();
+        }
+
+        if (IsKeyPressed(KEY_UP)) {
+            gpu.interrupt_enable = 1;
+            gpu.interrupt_code_in = 0b01;
+            gpu.interrupt_data_in = 0x7F;
+            gpu.eval();
+            gpu.interrupt_enable = 0;
+            gpu.eval();
+        }
+
+        if (IsKeyPressed(KEY_DOWN)) {
+            gpu.interrupt_enable = 1;
+            gpu.interrupt_code_in = 0b01;
+            gpu.interrupt_data_in = 0x01;
+            gpu.eval();
+            gpu.interrupt_enable = 0;
+            gpu.eval();
+        }
+
+        if (wait_for_key) {
+            char c;
+            if ((c = (char)GetCharPressed())) {
+                gpu.interrupt_enable = 1;
+                gpu.interrupt_code_in = 0b00;
+                gpu.interrupt_data_in = c;
+                gpu.eval();
+                gpu.interrupt_enable = 0;
+                gpu.eval();
+                wait_for_key = false;
+            }
         }
 
         BeginDrawing();
