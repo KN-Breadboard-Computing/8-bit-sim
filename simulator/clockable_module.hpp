@@ -11,7 +11,6 @@
 template <typename T>
 concept ClockableModule = requires(T module) {
     module.eval();
-    module.clk;
 };
 
 struct ClockBase {
@@ -28,7 +27,11 @@ template <ClockableModule T> struct Clock : ClockBase {
 
     void tick() override {
         time_since_last_tick = 0u;
-        module->clk = is_posedge;
+        if constexpr(requires {module->clk();}) {
+            *module->clk() = is_posedge;
+        } else {
+            module->clk = is_posedge;
+        }
         module->eval();
         is_posedge = !is_posedge;
         if (current_period() == 0u) {

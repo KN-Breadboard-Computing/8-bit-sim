@@ -1,6 +1,7 @@
 #include "clockable_module.hpp"
 #include "vga_simulator.hpp"
 #include <Vcpu___024root.h>
+#include <Vmem_unit.h>
 #include <Vmonitor_tester.h>
 #include <Vgpu.h>
 #include <Vcpu.h>
@@ -48,8 +49,23 @@ void print_cpu(const Vcpu& cpu) {
     const auto rootp = cpu.rootp;
     const auto a_out = rootp->cpu_adapter__DOT__cpu__DOT__a_out;
     const auto b_out = rootp->cpu_adapter__DOT__cpu__DOT__b_out;
-    fmt::println("CPU: A: {} | B: {}", a_out, b_out);
+    const auto pc_out = rootp->cpu_adapter__DOT__cpu__DOT__pc_out;
+    fmt::println("CPU: PC: {} | A: {} | B: {}", pc_out, a_out, b_out);
 }
+
+struct CpuAndMem {
+    Vcpu* cpu;
+    Vmem_unit* mem;
+
+    CData* clk() {
+        return &cpu->clk;
+    }
+
+    void eval() {
+        cpu->eval();
+        mem->eval();
+    }
+};
 
 auto main() -> int {
     auto pixels = std::array<Color, scaled_width * scaled_height>{};
@@ -60,7 +76,10 @@ auto main() -> int {
     Vgpu gpu{};
     Vcpu cpu{};
 
-    auto cpu_clock = Clock{&cpu, 4, 0, true};
+    Vmem_unit cpu_memory{};
+    CpuAndMem cpu_and_mem{&cpu, &cpu_memory};
+
+    auto cpu_clock = Clock{&cpu_and_mem, 4, 0, true};
     auto gpu_clock = Clock{&gpu, 1, 0, true};
 
     auto clock_scheduler = ClockScheduler{};
