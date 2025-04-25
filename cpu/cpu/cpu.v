@@ -30,7 +30,7 @@ module cpu (
     wire [4:0] irq_no;
 
     // SIGNAL REGISTER
-    wire [47:0] signals;
+    wire [47:0] signals /* verilator public_flat */;
     /* verilator lint_on UNUSEDSIGNAL */
 
     control_unit ctrl_unit(
@@ -80,9 +80,9 @@ module cpu (
         .data_out(addr_bus)
     );
 
-    // ALU 
-    wire [7:0] a_out;
-    wire [7:0] b_out;
+    // ALU
+    wire [7:0] a_out /* verilator public_flat */;
+    wire [7:0] b_out /* verilator public_flat */;
 
     register a_reg (
         .clk(clk),

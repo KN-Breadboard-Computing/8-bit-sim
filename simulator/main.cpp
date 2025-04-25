@@ -1,5 +1,6 @@
 #include "clockable_module.hpp"
 #include "vga_simulator.hpp"
+#include <Vcpu___024root.h>
 #include <Vmonitor_tester.h>
 #include <Vgpu.h>
 #include <Vcpu.h>
@@ -43,6 +44,13 @@ void print_error_if_failed(const rd::expected<T, VGASimulatorError>& result) {
     }
 }
 
+void print_cpu(const Vcpu& cpu) {
+    const auto rootp = cpu.rootp;
+    const auto a_out = rootp->cpu_adapter__DOT__cpu__DOT__a_out;
+    const auto b_out = rootp->cpu_adapter__DOT__cpu__DOT__b_out;
+    fmt::println("CPU: A: {} | B: {}", a_out, b_out);
+}
+
 auto main() -> int {
     auto pixels = std::array<Color, scaled_width * scaled_height>{};
 
@@ -52,7 +60,7 @@ auto main() -> int {
     Vgpu gpu{};
     Vcpu cpu{};
 
-    auto cpu_clock = Clock{&cpu, 1, 0, true};
+    auto cpu_clock = Clock{&cpu, 4, 0, true};
     auto gpu_clock = Clock{&gpu, 1, 0, true};
 
     auto clock_scheduler = ClockScheduler{};
@@ -84,6 +92,8 @@ auto main() -> int {
                     set_pixel_scaled(pixels,x,y,color);
             });
             print_error_if_failed(is_timing_correct);
+
+            print_cpu(cpu);
 
             UpdateTexture(texture, pixels.data());
         }
