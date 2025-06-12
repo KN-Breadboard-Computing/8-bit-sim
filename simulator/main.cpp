@@ -13,9 +13,6 @@
 #include <span>
 #include <ps2.hpp>
 
-#include "emulator.h"
-#include "config.h"
-
 // Raylib / Display constants
 constexpr static uint32_t scale = 2u;
 constexpr static auto scaled_width = static_cast<uint32_t>(h_visible_area * scale);
@@ -85,18 +82,6 @@ auto main() -> int {
     auto cpu_clock = Clock{&cpu_and_mem, 4, 0, true};
     auto gpu_clock = Clock{&gpu, 1, 0, true};
 
-    Config config{};
-    load_config(&config, "instruction.json");
-
-    Emulator emulator{};
-    init_emulator(&emulator);
-
-    emulator.memory[0] = 10;
-    emulator.memory[1] = 10;
-    emulator.memory[2] = 10;
-    emulator.memory[3] = 10;
-    emulator.memory[4] = 10;
-
     auto clock_scheduler = ClockScheduler{};
     clock_scheduler.add_clock(&gpu_clock);
     clock_scheduler.add_clock(&cpu_clock);
@@ -126,9 +111,7 @@ auto main() -> int {
                     set_pixel_scaled(pixels,x,y,color);
             });
             print_error_if_failed(is_timing_correct);
-
-            run_next_emulator_instruction(&emulator, &config);
-            fmt::println("CPU: {}", emulator.program_counter);
+            print_cpu(cpu);
 
             UpdateTexture(texture, pixels.data());
         }
